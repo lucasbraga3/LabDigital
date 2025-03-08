@@ -1,0 +1,17 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "Server for models and images for MindAR",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Dynamic",
+    "Teaching",
+    "AR",
+    "MindAR"
+  ],
+  "author": "Lucas Braga",
+  "license": "MIT"
+}
