@@ -1,11 +1,7 @@
+import '../node_modules/aframe/dist/aframe-v1.7.0.js';
+import '../node_modules/mind-ar/dist/mindar-image-aframe.prod.js';
 
-<html>
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-    <script>
-      document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function() {
 	const sceneEl = document.querySelector('a-scene');
 	let arSystem;
 	sceneEl.addEventListener('loaded', function () {
@@ -61,22 +57,3 @@
         }
 	});
       });
-    </script>
-  </head>
-  <body>
-    <div style="position: absolute; z-index: 1000">
-      <button id="example-start-button">Start</button>
-      <button id="example-pause-button">Pause</button>
-      <button id="example-pause-keep-video-button">Pause (keep video)</button>
-      <button id="example-unpause-button">UnPause</button>
-      <button id="example-stop-button">Stop</button>
-    </div>
-    <a-scene mindar-image="imageTargetSrc: ./targets.mind; uiScanning:no; autoStart: false;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-      <a-camera position="0 0 0" look-controls="enabled: false" cursor="fuse: false; rayOrigin: mouse;" raycaster="near: 10; far: 10000; objects: .clickable"></a-camera>
-
-      <a-entity id="example-target" mindar-image-target="targetIndex: 0">
-	<a-plane id="example-plane" class="clickable" color="blue" opaciy="0.5" position="0 0 0" height="0.552" width="1" rotation="0 0 0"></a-plane>
-      </a-entity>
-    </a-scene>
-  </body>
-</html>

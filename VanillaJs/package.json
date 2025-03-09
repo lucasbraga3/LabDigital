@@ -1,0 +1,19 @@
+{
+  "name": "vanillajs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aframe": "^1.7.0",
+    "mind-ar": "^1.2.5"
+  },
+  "devDependencies": {
+    "vite": "^6.2.1"
+  }
+}
