@@ -6,11 +6,17 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "Dynamic",
+    "Teaching",
+    "AR",
+    "MindAR"
+  ],
+  "author": "Lucas Braga",
+  "license": "MIT",
   "dependencies": {
     "aframe": "^1.7.0",
+    "axios": "^1.8.4",
     "mind-ar": "^1.2.5"
   },
   "devDependencies": {

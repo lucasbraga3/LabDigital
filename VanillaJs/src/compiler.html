@@ -1,0 +1,39 @@
+<html>
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.2/min/dropzone.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.2/dropzone.min.css">
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script> -->
+    <!--
+    <script id="mindar-module" src="../../dist-dev/mindar-image.js"  type="module"></script>
+    -->
+
+    <script type="module" src="compilescript.js"></script>
+
+    <style>
+      #container {
+        display: flex;
+        flex-direction: column;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <p>Usage:</p>
+      <ol>
+        <li>drop target images (e.g. .png) into the drop zone. (can drop multiple)</li>
+        <li>click "Start". It could take a while (especially for large image)</li>
+        <li>When done, some debug images will shown, and you can visualize the feature points.</li>
+        <li>click "download" to get a targets.mind file, which is used in the AR webpage</li>
+      </ol>
+    </div>
+    <button id="startButton">Start</button>
+    <!-- <button id="downloadButton">Download</button> -->
+    <span id="progress"></span>
+    <div id="dropzone" class="dropzone"></div>
+
+    <!-- Change /upload-target to your upload address -->
+    <div id="container">
+    </div>
+  </body>
+</html>
+
