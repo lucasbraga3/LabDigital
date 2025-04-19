@@ -13,11 +13,11 @@ const upload = multer({ storage: storage });
 
 app.listen(PORT, () => console.log(`Server listening on port: ${PORT}`));
 
-app.post('/upload', upload.single('targets'), (req, res) => {
+app.post('/upload/target', upload.single('targets'), (req, res) => {
     if (!req.file) return res.status(400).send('No file uploaded.');
   
-    const randomId = Math.floor(Math.random() * 1000) + 1;
-    const fileName = `file${randomId}.mind`; // You can use .txt, .bin, or .mind
+    const randomId = Math.floor(Math.random() * 1000000) + 1;
+    const fileName = `${randomId}.mind`; // You can use .txt, .bin, or .mind
     const filePath = path.join(__dirname, 'public', fileName);
   
     fs.writeFile(filePath, req.file.buffer, err => {
@@ -29,4 +29,13 @@ app.post('/upload', upload.single('targets'), (req, res) => {
       res.status(200).send({ filename: fileName });
     });
   });
+
+app.post('upload/slides', upload.single('slides'), (req, res) => {  
+    if (!req.file) return res.status(400).send('No file uploaded.');
+    file_string = req.codetgt + '.mind';
+    const filePath = path.join(__dirname, 'public', file_string);
+    //transform the file to a correct format
+    
+});    
+
 //TODO: FILE UPLOADING RECIEVER

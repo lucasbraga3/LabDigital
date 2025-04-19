@@ -21,7 +21,7 @@ const send = async (buffer) => {
           var blob = new Blob([buffer]);
           const formData = new FormData();
           formData.append("targets",blob,"targets.mind");
-          const response = await axios.post("http://localhost:3000/upload",  formData, {
+          const response = await axios.post("http://localhost:3000/upload/target",  formData, {
                 headers: {
                   'Content-Type': 'multipart/form-data'
                 }
