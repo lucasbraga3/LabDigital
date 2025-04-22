@@ -71,6 +71,43 @@ app.post('/upload/slides', upload.single('slides'), async (req, res) => {
     fs.rm(filePath, { recursive: true, force: true }, (err) => {
       if (err) console.error('Error deleting file:', err);
     } );
+    let entitycode = '';
+    let gencode = `
+    <a-scene mindar-image="imageTargetSrc: http://localhost:3000/file250.mind; uiScanning:yes; autoStart: false;" color-space="sRGB" renderer="colorManagement: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+      <a-camera position="0 0 0" look-controls="enabled: false" cursor="fuse: false; rayOrigin: mouse;" raycaster="near: 10; far: 10000; objects: .clickable"></a-camera>
+    `;
+    gencode += `
+    <a-assets>
+    <img id="img1" src="http://localhost:3000/left-arrow.png" crossorigin="anonymous" />
+    <img id="img2" src="http://localhost:3000/right-arrow.png" crossorigin="anonymous" />`;
+    gencode += `\n<img id="example-image-1" src="http://localhost:3000/${req.body.codetgt}.1.png" crossorigin="anonymous" />`;
+      entitycode += `
+      <a-entity id="slide-1" class="slides">
+        <a-image src="#example-image-1"></a-image>
+        <a-image  class="clickable left-arrow" src="#img1" position="-0.7 0 0" height="0.15" width="0.15"></a-image>
+        <a-image  class="clickable right-arrow" src="#img2" position="0.7 0 0" height="0.15" width="0.15"></a-image>
+      </a-entity>`;
+    for(let i = 2; i<=req.body.numpags; i++){
+      gencode += `\n<img id="example-image-${i}" src="http://localhost:3000/${req.body.codetgt}.${i}.png" crossorigin="anonymous" />`;
+      entitycode += `
+      <a-entity id="slide-${i}" visible =false class="slides">
+        <a-image src="#example-image-${i}"></a-image>
+        <a-image  class="clickable left-arrow" src="#img1"  position="-0.7 0 0" height="0.15" width="0.15"></a-image>
+        <a-image  class="clickable right-arrow" src="#img2" position="0.7 0 0" height="0.15" width="0.15"></a-image>
+      </a-entity>`;
+    }
+    gencode += `\n</a-assets>
+                  <a-entity id="slides-container" mindar-image-target="targetIndex: 0">`;
+    gencode += entitycode;
+    gencode += `\n</a-entity>
+                </a-scene>`
+    fs.writeFile(path.join(__dirname, 'public', `${req.body.codetgt}.html`), gencode, (err) => {
+      if (err) {
+        console.error('Error writing HTML file:', err);
+        return res.status(500).send('Failed to write HTML file.');
+      }
+      console.log(`HTML file created: ${req.body.codetgt}.html`);
+    } );
     res.json({
       success: true,
       message: 'PDF converted successfully',
