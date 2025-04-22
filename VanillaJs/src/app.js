@@ -39,24 +39,14 @@ document.addEventListener("DOMContentLoaded", function() {
 	sceneEl.addEventListener("arError", (event) => {
 	  // console.log("MindAR failed to start")
 	});
-	// detect target found
+	// detect target found SE QUISER ADICIONAR LOGICA QUANDO VE O TARGET
 	//exampleTarget.addEventListener("targetFound", event => {
 	  //console.log("target found");
 	//});
-	// detect target lost
+	// detect target lost SE QUISER ADICIONAR LOGICA QUANDO PERDE O TARGET
 	//exampleTarget.addEventListener("targetLost", event => {
 	  //console.log("target lost");
 	//});
-	// detect click event
-	// examplePlane.addEventListener("click", event => {
-    //     const color = examplePlane.getAttribute("color")
-    //     if(color == "blue"){
-	//         examplePlane.setAttribute("color","red")
-    //     }
-    //     else{
-    //         examplePlane.setAttribute("color","blue")
-    //     }
-	// });
 //VERIFICAR SE VAI DAR PROBLEMA SE NAO TIVER ARROW KEY ------------------------------------------
 	document.querySelectorAll(".left-arrow").forEach(el => {
 		el.addEventListener("click", () => {
@@ -68,7 +58,6 @@ document.addEventListener("DOMContentLoaded", function() {
 				break;
 			}
 		}
-		console.log("crrent index = ", currentIndex);
 		slides[currentIndex].setAttribute("visible", false);
 		if (currentIndex == 0) {
 			currentIndex = slides.length - 1;
@@ -91,7 +80,6 @@ document.addEventListener("DOMContentLoaded", function() {
 				break;
 			}
 		}
-		console.log("crrent index = ", currentIndex);
 		slides[currentIndex].setAttribute("visible", false);
 		if (currentIndex == slides.length - 1) {
 			currentIndex = 0;
@@ -101,7 +89,6 @@ document.addEventListener("DOMContentLoaded", function() {
 		}
 		slides[currentIndex].setAttribute("visible", true);
 		
-		console.log(slides.length);
 	});
 	});
 });
