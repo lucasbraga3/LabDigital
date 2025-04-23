@@ -18,39 +18,40 @@ const download = (buffer) => {
   window.URL.revokeObjectURL(aLink.href);
 }
 
-const send = async (buffer) => {
+const send = async (buffer, codetgt = null) => {
   console.log("sending...");
-  try
-  {
-    var blob = new Blob([buffer]);
+  try {
+    const blob = new Blob([buffer]);
     const formData = new FormData();
-    formData.append("targets",blob,"targets.mind");
-    const response = await axios.post("http://localhost:3000/upload/target",  formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+
+    // Nome de arquivo (opcional e simbólico, o real é definido no backend)
+    formData.append("targets", blob, codetgt ? `${codetgt}.mind` : "targets.mind");
+
+    // Envia codetgt se tiver
+    if (codetgt) {
+      formData.append("codetgt", codetgt);
+    }
+
+    const response = await axios.post("http://localhost:3000/upload/target", formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
     });
 
     console.log("response", response);
-    
-    // Verify if the response has a status code of 200 (OK)
-    if (response.status === 200) {
-      // Get the file name from the response
-      const fileName = response.data.fileName; // Assuming the server returns the file name in the response
-      console.log('File saved as:', fileName);
 
-      alert('File saved as: ' + fileName);
+    if (response.status === 200) {
+      const fileName = response.data.fileName;
+      console.log('✅ File saved as:', fileName);
+      alert('✅ File saved as: ' + fileName);
+    } else if (response.status === 400) {
+      console.error('⚠️ Error: File already exists.');
+      alert('⚠️ File already exists. Please choose a different code.');
     }
-    // Verify if the response has a status code of 400 (Bad Request)
-    else if (response.status === 400) {
-      console.error('Error: File already exists. Please choose a different name.');
-    }
+
+  } catch (err) {
+    console.error("❌ Error sending file:", err);
+    alert("❌ Failed to send .mind file");
   }
-  catch(err)
-  {
-    console.log("I tried..");
-  }
-}
+};
 
 const showData = (data) => {
   console.log("data", data);
@@ -122,26 +123,38 @@ const loadImage = async (file) => {
   })
 }
 
-const compileFiles = async (files) => {
-  const images = [];
-  for (let i = 0; i < files.length; i++) {
-    images.push(await loadImage(files[i]));
+const compileFiles = async (files, codetgt = null) => {
+  try {
+    // 1) Carrega imagens
+    const images = [];
+    for (const file of files) {
+      images.push(await loadImage(file));
+    }
+
+    // 2) Compila com progresso
+    const start = performance.now();
+    const dataList = await compiler.compileImageTargets(images, progress => {
+      document.getElementById("progress").innerText = `progress: ${progress.toFixed(2)}%`;
+    });
+    console.log('⏱️ exec time compile:', performance.now() - start, 'ms');
+
+    // 3) Mostra debug das imagens
+    dataList.forEach(showData);
+
+    // 4) Exporta buffer .mind
+    const exportedBuffer = await compiler.exportData();
+
+    // 5) Envia para o servidor, passando codetgt (se existir)
+    await send(exportedBuffer, codetgt);
+
+  } catch (err) {
+    console.error('❌ Error in compileFiles:', err);
+    alert('Erro ao compilar imagens.');
   }
-  let _start = new Date().getTime();
-const dataList = await compiler.compileImageTargets(images, (progress) => {
-document.getElementById("progress").innerHTML = 'progress: ' + progress.toFixed(2) + "%";
-});
-  console.log('exec time compile: ', new Date().getTime() - _start);
-  for (let i = 0; i < dataList.length; i++) {
-    showData(dataList[i]);
-  }
-  const exportedBuffer = await compiler.exportData();
-  send(exportedBuffer);
-  // document.getElementById("downloadButton").addEventListener("click", function() {
-  //   send(exportedBuffer);
-  //   download(exportedBuffer);
-  // });
-}
+};
+
+// Torna a função global para uso no HTML
+window.compileFiles = compileFiles;
 
 const loadMindFile = async (file) => {
   var reader = new FileReader();
