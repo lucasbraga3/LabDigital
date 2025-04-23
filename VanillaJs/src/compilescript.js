@@ -1,5 +1,8 @@
-import '../node_modules/aframe/dist/aframe-v1.7.0.js';
-import "../node_modules/mind-ar/dist/mindar-image-aframe.prod.js";
+// import '../node_modules/aframe/dist/aframe-v1.7.0.js';
+// import "../node_modules/mind-ar/dist/mindar-image-aframe.prod.js";
+
+import "aframe";
+import "mind-ar/dist/mindar-image-aframe.prod.js";
 import axios from 'axios';
 
 Dropzone.autoDiscover = false;
