@@ -19,20 +19,37 @@ const download = (buffer) => {
 }
 
 const send = async (buffer) => {
-    console.log("sending...");
-    try{
-          var blob = new Blob([buffer]);
-          const formData = new FormData();
-          formData.append("targets",blob,"targets.mind");
-          const response = await axios.post("http://localhost:3000/upload/target",  formData, {
-                headers: {
-                  'Content-Type': 'multipart/form-data'
-                }
-              }); //response = nome/codigo do arquivo
-            }
-      catch(err){
-          console.log("I tried..");
+  console.log("sending...");
+  try
+  {
+    var blob = new Blob([buffer]);
+    const formData = new FormData();
+    formData.append("targets",blob,"targets.mind");
+    const response = await axios.post("http://localhost:3000/upload/target",  formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
       }
+    });
+
+    console.log("response", response);
+    
+    // Verify if the response has a status code of 200 (OK)
+    if (response.status === 200) {
+      // Get the file name from the response
+      const fileName = response.data.fileName; // Assuming the server returns the file name in the response
+      console.log('File saved as:', fileName);
+
+      alert('File saved as: ' + fileName);
+    }
+    // Verify if the response has a status code of 400 (Bad Request)
+    else if (response.status === 400) {
+      console.error('Error: File already exists. Please choose a different name.');
+    }
+  }
+  catch(err)
+  {
+    console.log("I tried..");
+  }
 }
 
 const showData = (data) => {
