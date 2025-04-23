@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Gerar arquivo .mind</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.2/min/dropzone.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.2/dropzone.min.css">
+    <script type="module" src="../scripts/compilescript.js"></script>
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+      }
+
+      label, input {
+        font-size: 16px;
+      }
+
+      input[type="text"] {
+        padding: 5px;
+        width: 200px;
+        margin-bottom: 20px;
+        display: block;
+      }
+
+      .dropzone {
+        border: 2px dashed #007bff;
+        padding: 40px;
+        background: #f9f9f9;
+        text-align: center;
+        cursor: pointer;
+        margin-bottom: 20px;
+      }
+
+      .dz-message {
+        font-size: 16px;
+        color: #666;
+      }
+
+      button {
+        padding: 10px 20px;
+        font-size: 16px;
+      }
+
+      #container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Gerar targets.mind</h2>
+    <p>Insira o código de 6 dígitos que será usado como nome do arquivo .mind:</p>
+
+    <label for="codetgt">Código (6 dígitos):</label>
+    <input type="text" id="codetgt" maxlength="6" placeholder="Ex: 123456" />
+
+    <form class="dropzone" id="dropzone">
+      <div class="dz-message">Clique ou solte imagens .png ou .jpg aqui</div>
+    </form>
+
+    <button id="startButton">Start</button>
+    <span id="progress"></span>
+
+    <div id="container"></div>
+
+    <script>
+      Dropzone.autoDiscover = false;
+    
+      const dropzone = new Dropzone("#dropzone", {
+        url: "#",
+        autoProcessQueue: false,
+        addRemoveLinks: true,
+        acceptedFiles: ".png,.jpg,.jpeg",
+      });
+    
+      document.getElementById("startButton").addEventListener("click", () => {
+        const codetgt = document.getElementById("codetgt").value.trim();
+    
+        if (dropzone.files.length === 0) {
+          alert("Adicione pelo menos uma imagem.");
+          return;
+        }
+    
+        // Chama a função do compilescript.js com ou sem codetgt
+        window.compileFiles(dropzone.files, codetgt || null);
+      });
+    </script>
+    
+  </body>
+</html>
