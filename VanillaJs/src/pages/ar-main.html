@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+  
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AR Main</title>
@@ -18,26 +19,19 @@
   <div id="ar-container" style="flex : 1; display: flex; justify-content: center; align-items: center; width: 100%; height: 100vh;">
     <!-- Cenas AR serão carregadas aqui -->
   </div>
-
   <script type="module">
     import { initARControls } from "../scripts/ar-script.js";
 
     (async () => {
       const container = document.getElementById("ar-container");
       container.innerHTML = "";
-
+      const code = prompt("Digite o código da cena AR: ");
+      console.log(code);
       try {
-        const listRes = await fetch("http://localhost:3000/slides");
-        if (!listRes.ok) throw new Error(`Status ${listRes.status}`);
-        const { codes } = await listRes.json();
-
-        const htmlBlobs = await Promise.all(codes.map(async code => {
-          const res = await fetch(`http://localhost:3000/slides/${code}`);
-          return res.ok ? res.text() : "";
-        }));
-
-        container.innerHTML = htmlBlobs.join("");
-
+        // const listRes = await fetch("http://localhost:3000/slides");
+        // if (!listRes.ok) throw new Error(`Status ${listRes.status}`);
+        const res = await fetch(`http://localhost:3000/slides/${code}`);
+        container.innerHTML = res.ok ? await res.text() : "<p style='color:red'>Falha ao carregar cenas AR.</p>";
         // Initialize AR controls after loading the scenes
         initARControls();
 
