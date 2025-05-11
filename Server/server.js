@@ -34,20 +34,53 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 app.listen(PORT, () => console.log(`Server listening on port: ${PORT}`));
 
-app.post('/upload/target', upload.single('targets'), (req, res) => {
+//OLD SERVE STATIC
+// app.post('/upload/target', upload.single('targets'), (req, res) => {
+//   let codetgt = req.body.codetgt || Math.floor(Math.random() * 1000000) + 1;
+//   const targetDir = path.join(__dirname, 'public', 'targets', String(codetgt));
+//   if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
+
+//   const fileName = `${codetgt}.mind`;
+//   const filePath = path.join(targetDir, fileName);
+
+//   if (fs.existsSync(filePath)) return res.status(409).send('File already exists.');
+
+//   fs.writeFile(filePath, req.file.buffer, err => {
+//     if (err) return res.status(500).send('Failed to save file.');
+//     return res.status(200).send({ fileName, codetgt });
+//   });
+// });
+
+app.post('/upload/target', upload.single('targets'), async (req, res) => {
   let codetgt = req.body.codetgt || Math.floor(Math.random() * 1000000) + 1;
-  const targetDir = path.join(__dirname, 'public', 'targets', String(codetgt));
-  if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
-
-  const fileName = `${codetgt}.mind`;
-  const filePath = path.join(targetDir, fileName);
-
-  if (fs.existsSync(filePath)) return res.status(409).send('File already exists.');
-
-  fs.writeFile(filePath, req.file.buffer, err => {
-    if (err) return res.status(500).send('Failed to save file.');
+  const key = `mind:${codetgt}`;
+  const exists = await redis.exists(key);
+  if (exists) {
+    return res.status(409).send('Target already exists.');}
+  try {
+    
+    await redis.set(key, req.file.buffer.toString('base64'), 'EX',  108000); // expires in 3h
+    const fileName = `${codetgt}.mind`;
     return res.status(200).send({ fileName, codetgt });
-  });
+  } catch (err) {
+    console.error('Error saving target:', err);
+    return res.status(500).send('Failed to save target file.');
+  }
+});
+
+app.get('/targets/:codetgt', async (req, res) => { //get targets from redis
+  const { codetgt } = req.params;
+  try {
+    const base64 = await redis.get(`mind:${codetgt}`);
+    if (!base64) return res.status(404).send('Target file not found in Redis.');
+
+    const buffer = Buffer.from(base64, 'base64');
+    res.set('Content-Type', 'application/octet-stream');
+    res.send(buffer);
+  } catch (err) {
+    console.error('Redis target fetch error:', err);
+    res.status(500).send('Redis error');
+  }
 });
 
 app.get('/slides', (req, res) => { //show all codes
@@ -63,15 +96,15 @@ app.get('/slides', (req, res) => { //show all codes
   }
 });
 
-app.get('/slides/:codetgt', (req, res) => { //serve static
-  const codetgt = req.params.codetgt;
-  if (!/^[a-zA-Z0-9_-]{1,20}$/.test(codetgt)) return res.status(400).send('Invalid codetgt');
+// app.get('/slides/:codetgt', (req, res) => { //OLD serve static
+//   const codetgt = req.params.codetgt;
+//   if (!/^[a-zA-Z0-9_-]{1,20}$/.test(codetgt)) return res.status(400).send('Invalid codetgt');
 
-  const htmlPath = path.join(__dirname, 'public', 'slides', codetgt, `${codetgt}.html`);
-  if (!fs.existsSync(htmlPath)) return res.status(404).send('Slide not found');
+//   const htmlPath = path.join(__dirname, 'public', 'slides', codetgt, `${codetgt}.html`);
+//   if (!fs.existsSync(htmlPath)) return res.status(404).send('Slide not found');
 
-  return res.sendFile(htmlPath);
-});
+//   return res.sendFile(htmlPath);
+// });
 
 // Serve image from Redis
 app.get('/img/:codetgt/:page', async (req, res) => {
@@ -92,7 +125,7 @@ app.get('/img/:codetgt/:page', async (req, res) => {
 app.post('/upload/slides', uploadSlides.single('slides'), async (req, res) => {
   try {
     const codetgt = req.body.codetgt;
-    const slidesDir = path.join(__dirname, 'public', 'slides', codetgt);
+    const slidesDir = path.join(__dirname, 'public', 'slides');
     const pdfPath = req.file.path;
 
     const convert = fromPath(pdfPath, {
@@ -106,7 +139,7 @@ app.post('/upload/slides', uploadSlides.single('slides'), async (req, res) => {
     });
 
     const convertedImages = [];
-    for (let page = 1; page <= 200; page++) {
+    for (let page = 1; page <= 200; page++) { // Limit to 200 pages
       try {
         const out = await convert(page);
         const imgPath = path.join(slidesDir, path.basename(out.path));
@@ -123,8 +156,9 @@ app.post('/upload/slides', uploadSlides.single('slides'), async (req, res) => {
 
     const htmlPath = path.join(slidesDir, `${codetgt}.html`);
     const gencode = generateMindARHtml({ codetgt, pages: convertedImages });
-    fs.writeFileSync(htmlPath, gencode, 'utf8');
-
+    //fs.writeFileSync(htmlPath, gencode, 'utf8');
+    const htmlBase64 = Buffer.from(gencode).toString('base64');
+    await redis.set(`slides:${codetgt}`,htmlBase64, 'EX', 10800); // Cache HTML in Redis
     res.status(200).json({ success: true, codetgt, images: convertedImages, html: `/slides/${codetgt}/${codetgt}.html` });
   } catch (err) {
     console.error(err);
@@ -132,15 +166,29 @@ app.post('/upload/slides', uploadSlides.single('slides'), async (req, res) => {
   }
 });
 
+app.get('/slides/:codetgt', async (req, res) => { // Serve HTML from Redis
+  const { codetgt } = req.params;
+  try {
+    const html = await redis.get(`slides:${codetgt}`);
+    if (!html) return res.status(404).send('HTML not found in Redis.');
+
+    res.set('Content-Type', 'text/html');
+    res.send(Buffer.from(html, 'base64').toString('utf-8'));
+  } catch (err) {
+    console.error('Redis HTML fetch error:', err);
+    res.status(500).send('Redis error');
+  }
+});
+
 function generateMindARHtml({ codetgt, pages }) {
-  const mindUrl = `http://localhost:${PORT}/targets/${codetgt}/${codetgt}.mind`;
+  const mindUrl = `http://localhost:${PORT}/targets/${codetgt}`;
   const arrowTags = [
-    `<img id="img1" src="http://localhost:3000/left-arrow.png" crossorigin="anonymous" />`,
-    `<img id="img2" src="http://localhost:3000/right-arrow.png" crossorigin="anonymous" />`
+    `<img id="img1" src="http://localhost:${PORT}/left-arrow.png" crossorigin="anonymous" />`,
+    `<img id="img2" src="http://localhost:${PORT}/right-arrow.png" crossorigin="anonymous" />`
   ].join('\n    ');
 
   const assetTags = pages
-    .map(i => `<img id="example-image-${i}" src="http://localhost:3000/img/${codetgt}/${i}" crossorigin="anonymous" />`)
+    .map(i => `<img id="example-image-${i}" src="http://localhost:${PORT}/img/${codetgt}/${i}" crossorigin="anonymous" />`)
     .join('\n    ');
 
   const entityTags = pages.map((i, idx) => `
