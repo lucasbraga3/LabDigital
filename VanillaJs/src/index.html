@@ -1,14 +1,77 @@
-<div>
-  <h1>Pagina principal</h1>
-  <a href="./pages/compiler.html">
-    Compilar
-  </a>
-  <br/>
-  <a href="./pages/slides.html">
-    Slides
-  </a>	
-  <br/>
-  <a href="./pages/ar-main.html">
-    Ativar Realidade Aumentada
-  </a>
-</div>
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="./index.css" />
+  <meta charset="UTF-8" />
+  <title>Lab Digital de RA</title>
+</head>
+<body class="flex flex-col min-h-screen">
+  <!-- Header -->
+  <header class="bg-blue-600 text-white shadow-lg">
+    <nav class="container mx-auto px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <a href="/" class="text-xl font-bold">Lab Digital de RA</a>
+        </div>
+        <div class="hidden md:flex items-center space-x-8">
+          <a href="https://github.com/lucasbraga3/LabDigital" class="hover:text-blue-200 transition-colors">Código fonte do projeto</a>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-grow">
+    <div class="flex flex-col items-center justify-center py-16 bg-gray-100">
+      <h1 class="font-serif font-extrabold text-3xl mb-8 text-center px-4">
+        Bem-vindo ao Lab Digital de Realidade Aumentada!
+      </h1>
+      <div class="space-y-6">
+        <a href="./pages/compiler.html" class="block">
+          <button class="button-89 w-64">Upload de Alvo</button>
+        </a>
+        <a href="./pages/slides.html" class="block">
+          <button class="button-89 w-64">Upload Slides</button>
+        </a>	
+        <a href="./pages/ar-main.html" class="block">
+          <button class="button-89 w-64">Experiência AR</button>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-100 border-t mt-12">
+    <div class="container mx-auto px-6 py-8">
+      <div class="md:grid md:grid-cols-2 md:gap-15">
+        <div class="mb-8 md:mb-0">
+          <h3 class="text-lg font-semibold mb-4">Sobre o Lab</h3>
+          <p class="text-gray-600">
+            Plataforma integrada para desenvolvimento e experiência em realidade aumentada 
+            com suporte a múltiplos formatos de mídia.
+          </p>
+        </div>
+        <!-- <div class="mb-8 md:mb-0">
+          <h3 class="text-lg font-semibold mb-4">Recursos</h3>
+          <ul class="space-y-2">
+            <li><a href="/politica-privacidade" class="text-blue-600 hover:text-blue-800">Política de Privacidade</a></li>
+            <li><a href="/termos-uso" class="text-blue-600 hover:text-blue-800">Termos de Uso</a></li>
+            <li><a href="/documentacao" class="text-blue-600 hover:text-blue-800">Documentação Técnica</a></li>
+          </ul>
+        </div> -->
+        <div>
+          <h3 class="text-lg font-semibold mb-4">Instituição
+          </h3>
+          <p class="text-gray-600">
+            Universidade Federa Rural do Rio de Janeiro<br>
+            Instituto Multidisciplinar<br>
+          </p>
+        </div>
+      </div>
+      <div class="mt-8 pt-8 border-t text-center text-gray-600">
+        <p>Laboratório Digital de Realidade Aumentada.</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

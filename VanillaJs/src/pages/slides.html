@@ -1,70 +1,73 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <link rel="stylesheet" href="../index.css" />
     <meta charset="UTF-8" />
     <title>Enviar Slides</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.2/min/dropzone.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dropzone/5.7.2/dropzone.min.css">
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        margin: 20px;
-      }
-
-      label, input {
-        font-size: 16px;
-        margin-bottom: 10px;
-      }
-
-      input[type="text"] {
-        padding: 5px;
-        width: 200px;
-        margin-right: 10px;
-      }
-
-      .dropzone {
-        border: 2px dashed #007bff;
-        padding: 40px;
-        background: #f9f9f9;
-        text-align: center;
-        cursor: pointer;
-        margin-top: 20px;
-      }
-
-      .dz-message {
-        font-size: 16px;
-        color: #666;
-      }
-
-      button {
-        margin-top: 20px;
-        padding: 10px 20px;
-        font-size: 16px;
-        cursor: pointer;
-      }
-    </style>
+    <script src="../scripts/dropbox-dist.js"></script>
+    <link rel="stylesheet" href="../dropbox.css">
   </head>
   <body>
+    <!-- Header -->
+    <header class="bg-blue-600 text-white shadow-lg">
+      <nav class="container mx-auto px-6 py-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <a href="/" class="text-xl font-bold">Gerenciador de Slides</a>
+          </div>
+          <div class="hidden md:flex items-center space-x-8">
+            <a href="https://github.com/lucasbraga3/LabDigital" class="hover:text-blue-200 transition-colors">Código fonte do projeto</a>
+          </div>
+        </div>
+      </nav>
+    </header>
 
-    <h2>Enviar arquivos de slides</h2>
-    <p>Digite o código de 6 dígitos que você recebeu e envie os arquivos correspondentes.</p>
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-8">
+      <h2 class="text-2xl font-bold mb-4">Enviar arquivos de slides</h2>
+      <p class="mb-6 text-gray-600">Digite o código de 6 dígitos que você recebeu e envie os arquivos correspondentes.</p>
 
-    <label for="codetgt">Código:</label>
-    <input type="text" id="codetgt" maxlength="6" placeholder="Ex: 123456" />
-    
-    <form action="localhost:3000/upload/slides" class="dropzone" id="slideDropzone">
-      <div class="dz-message">Clique ou solte arquivos <strong>.pdf, .png, .pptx</strong> aqui</div>
-    </form>
+      <label for="codetgt" class="block mb-2">Código:</label>
+      <input type="text" id="codetgt" maxlength="6" class="border p-2 rounded mb-4 w-48" placeholder="Ex: 123456" />
+      
+      <form action="localhost:3000/upload/slides" class="dropzone" id="slideDropzone">
+        <div class="dz-message">Clique ou solte arquivos <strong>.pdf, .png, .pptx</strong> aqui</div>
+      </form>
 
-    <button id="uploadButton">Enviar</button>
+      <button id="uploadButton" class="button-89 mt-4">Enviar</button>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-100 mt-12 py-8 border-t">
+      <div class="container mx-auto px-6">
+        <div class="md:grid md:grid-cols-2 md:gap-15">
+          <div class="mb-8 md:mb-0">
+            <h3 class="text-lg font-semibold mb-4">Sobre o Sistema</h3>
+            <p class="text-gray-600">Plataforma envio e conversão para RA de apresentações em formato de slide.</p>
+          </div>
+  
+          <div>
+            <h3 class="text-lg font-semibold mb-4">Instituição
+            </h3>
+            <p class="text-gray-600">
+              Universidade Federa Rural do Rio de Janeiro<br>
+              Instituto Multidisciplinar<br>
+            </p>
+          </div>
+        </div>
+        <div class="mt-8 pt-8 border-t text-center text-gray-600">
+          <p>Laboratório Digital de Realidade Aumentada.</p>
+        </div>
+      </div>
+    </footer>
 
     <script>
       Dropzone.autoDiscover = false;
 
       const slideDropzone = new Dropzone("#slideDropzone", {
         url: "http://localhost:3000/upload/slides",
-        paramName: "slides",         // <-- ✅ deve ser 'slides' para funcionar igual ao Postman
-        maxFiles: 1,                 // <-- ✅ se quiser simular exatamente o comportamento do Postman
+        paramName: "slides",
+        maxFiles: 1,
         autoProcessQueue: false,
         acceptedFiles: ".pdf,.png,.pptx",
         addRemoveLinks: true,
@@ -98,6 +101,5 @@
         slideDropzone.processQueue();
       });
     </script>
-
   </body>
 </html>

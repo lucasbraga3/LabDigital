@@ -20,7 +20,7 @@ const slidesStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     const codetgt = req.body.codetgt;
     if (!codetgt) return cb(new Error('Missing codetgt'), null);
-    const slidesDir = path.join(__dirname, 'public', 'slides', codetgt);
+    const slidesDir = path.join(__dirname, 'public');
     fs.mkdirSync(slidesDir, { recursive: true });
     cb(null, slidesDir);
   },
@@ -83,18 +83,18 @@ app.get('/targets/:codetgt', async (req, res) => { //get targets from redis
   }
 });
 
-app.get('/slides', (req, res) => { //show all codes
-  const slidesRoot = path.join(__dirname, 'public', 'slides');
-  try {
-    const codes = fs.readdirSync(slidesRoot, { withFileTypes: true })
-      .filter(d => d.isDirectory())
-      .map(d => d.name)
-      .filter(code => fs.existsSync(path.join(slidesRoot, code, `${code}.html`)));
-    return res.json({ codes });
-  } catch (err) {
-    return res.status(500).json({ error: 'Failed to list slides' });
-  }
-});
+// app.get('/slides', (req, res) => { //show all codes OLD
+//   const slidesRoot = path.join(__dirname, 'public', 'slides');
+//   try {
+//     const codes = fs.readdirSync(slidesRoot, { withFileTypes: true })
+//       .filter(d => d.isDirectory())
+//       .map(d => d.name)
+//       .filter(code => fs.existsSync(path.join(slidesRoot, code, `${code}.html`)));
+//     return res.json({ codes });
+//   } catch (err) {
+//     return res.status(500).json({ error: 'Failed to list slides' });
+//   }
+// });
 
 // app.get('/slides/:codetgt', (req, res) => { //OLD serve static
 //   const codetgt = req.params.codetgt;
@@ -125,7 +125,7 @@ app.get('/img/:codetgt/:page', async (req, res) => {
 app.post('/upload/slides', uploadSlides.single('slides'), async (req, res) => {
   try {
     const codetgt = req.body.codetgt;
-    const slidesDir = path.join(__dirname, 'public', 'slides');
+    const slidesDir = path.join(__dirname, 'public');
     const pdfPath = req.file.path;
 
     const convert = fromPath(pdfPath, {
@@ -153,10 +153,7 @@ app.post('/upload/slides', uploadSlides.single('slides'), async (req, res) => {
     }
 
     fs.unlinkSync(pdfPath);
-
-    const htmlPath = path.join(slidesDir, `${codetgt}.html`);
     const gencode = generateMindARHtml({ codetgt, pages: convertedImages });
-    //fs.writeFileSync(htmlPath, gencode, 'utf8');
     const htmlBase64 = Buffer.from(gencode).toString('base64');
     await redis.set(`slides:${codetgt}`,htmlBase64, 'EX', 10800); // Cache HTML in Redis
     res.status(200).json({ success: true, codetgt, images: convertedImages, html: `/slides/${codetgt}/${codetgt}.html` });
