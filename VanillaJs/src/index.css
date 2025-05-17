@@ -1,16 +1,17 @@
 @import "tailwindcss";
-/* CSS */
+
+/* Button Style */
 .button-89 {
   --b: 3px;   /* border thickness */
   --s: .45em; /* size of the corner */
   --color: #0d0d0e;
-  
+
   padding: calc(.5em + var(--s)) calc(.9em + var(--s));
   color: var(--color);
   --_p: var(--s);
   background:
-    conic-gradient(from 90deg at var(--b) var(--b),#0000 90deg,var(--color) 0)
-    var(--_p) var(--_p)/calc(100% - var(--b) - 2*var(--_p)) calc(100% - var(--b) - 2*var(--_p));
+    conic-gradient(from 90deg at var(--b) var(--b), #0000 90deg, var(--color) 0)
+    var(--_p) var(--_p) / calc(100% - var(--b) - 2*var(--_p)) calc(100% - var(--b) - 2*var(--_p));
   transition: .3s linear, color 0s, background-color 0s;
   outline: var(--b) solid #0000;
   outline-offset: .6em;
@@ -24,7 +25,7 @@
 }
 
 .button-89:hover,
-.button-89:focus-visible{
+.button-89:focus-visible {
   --_p: 0px;
   outline-color: var(--color);
   outline-offset: .05em;
@@ -35,8 +36,9 @@
   color: #fff;
 }
 
-
-label, input {
+/* Form Elements */
+label,
+input {
   font-size: 16px;
 }
 
@@ -47,6 +49,7 @@ input[type="text"] {
   display: block;
 }
 
+/* Dropzone */
 .dropzone {
   border: 2px dashed #011b38;
   padding: 40px;
@@ -61,13 +64,44 @@ input[type="text"] {
   color: #181818;
 }
 
+/* Generic Button */
 button {
   padding: 10px 20px;
   font-size: 16px;
 }
 
+/* Container Layout */
 #container {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  padding: 1rem;
+}
+
+/* Responsive Styling */
+@media (max-width: 640px) {
+  input[type="text"] {
+    width: 100%;
+    font-size: 1rem;
+  }
+
+  .dropzone {
+    padding: 1.5rem;
+    font-size: 1rem;
+  }
+
+  .dz-message {
+    font-size: 1rem;
+  }
+
+  button,
+  .button-89 {
+    width: 100%;
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+  }
+
+  label {
+    font-size: 1rem;
+  }
 }
