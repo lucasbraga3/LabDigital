@@ -153,7 +153,7 @@ app.post('/upload/slides', uploadSlides.single('slides'), async (req, res) => {
     }
 
     fs.unlinkSync(pdfPath);
-    const gencode = generateMindARHtml({ codetgt, pages: convertedImages });
+    const gencode = generateMindARSlidesHtml({ codetgt, pages: convertedImages });
     const htmlBase64 = Buffer.from(gencode).toString('base64');
     await redis.set(`slides:${codetgt}`,htmlBase64, 'EX', 10800); // Cache HTML in Redis
     res.status(200).json({ success: true, codetgt, images: convertedImages, html: `/slides/${codetgt}/${codetgt}.html` });
@@ -177,7 +177,7 @@ app.get('/slides/:codetgt', async (req, res) => { // Serve HTML from Redis
   }
 });
 
-function generateMindARHtml({ codetgt, pages }) {
+function generateMindARSlidesHtml({ codetgt, pages }) {
   const mindUrl = `http://localhost:${PORT}/targets/${codetgt}`;
   const arrowTags = [
     `<img id="img1" src="http://localhost:${PORT}/left-arrow.png" crossorigin="anonymous" />`,
@@ -206,4 +206,8 @@ function generateMindARHtml({ codetgt, pages }) {
         ${entityTags}
       </a-entity>
     </a-scene>`;
+}
+
+function generateMindARGLTFModel({codetgt,pages}){
+  const mindUrl = `http://localhost:${PORT}/targets/${codetgt}`;
 }
