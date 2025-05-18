@@ -30,7 +30,7 @@
       try {
         // const listRes = await fetch("http://localhost:3000/slides");
         // if (!listRes.ok) throw new Error(`Status ${listRes.status}`);
-        const res = await fetch(`http://localhost:3000/slides/${code}`);
+        const res = await fetch(`https://localhost:3000/slides/${code}`);
         container.innerHTML = res.ok ? await res.text() : "<p style='color:red'>Falha ao carregar cena AR, verifique seu código.</p>";
         // Initialize AR controls after loading the scenes
         initARControls();

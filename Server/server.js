@@ -6,15 +6,26 @@ const path = require('path');
 const multer = require('multer');
 const { fromPath } = require('pdf2pic');
 const { createClient } = require('redis');
+const https = require('https');
 
 const app = express();
 const PORT = 3000;
 
-const redis = createClient({ url: 'redis://localhost:6379' });
-redis.connect().then(() => console.log('✅ Connected to Redis')).catch(console.error);
 
 app.use(cors());
+app.use(express.json());
 app.use(express.static('public'));
+
+// Redis Setup
+const redis = createClient({ url: 'redis://127.0.0.1:6379' });
+redis.on('error', (err) => console.error('Redis Client Error', err));
+redis.connect().then(() => console.log('✅ Redis Connected')).catch(console.error);
+
+// SSL setup (HTTPS)
+const sslOptions = {
+  key: fs.readFileSync('./localhost+2-key.pem'),
+  cert: fs.readFileSync('./localhost+2.pem'),
+};
 
 const slidesStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -32,7 +43,10 @@ const slidesStorage = multer.diskStorage({
 const uploadSlides = multer({ storage: slidesStorage });
 const upload = multer({ storage: multer.memoryStorage() });
 
-app.listen(PORT, () => console.log(`Server listening on port: ${PORT}`));
+// HTTPS Setup
+https.createServer(sslOptions, app).listen(PORT, () => {
+  console.log(`🔒 HTTPS Server rodando na porta ${PORT}`);
+});
 
 //OLD SERVE STATIC
 // app.post('/upload/target', upload.single('targets'), (req, res) => {
@@ -178,14 +192,14 @@ app.get('/slides/:codetgt', async (req, res) => { // Serve HTML from Redis
 });
 
 function generateMindARSlidesHtml({ codetgt, pages }) {
-  const mindUrl = `http://localhost:${PORT}/targets/${codetgt}`;
+  const mindUrl = `https://localhost:${PORT}/targets/${codetgt}`;
   const arrowTags = [
-    `<img id="img1" src="http://localhost:${PORT}/left-arrow.png" crossorigin="anonymous" />`,
-    `<img id="img2" src="http://localhost:${PORT}/right-arrow.png" crossorigin="anonymous" />`
+    `<img id="img1" src="https://localhost:${PORT}/left-arrow.png" crossorigin="anonymous" />`,
+    `<img id="img2" src="https://localhost:${PORT}/right-arrow.png" crossorigin="anonymous" />`
   ].join('\n    ');
 
   const assetTags = pages
-    .map(i => `<img id="example-image-${i}" src="http://localhost:${PORT}/img/${codetgt}/${i}" crossorigin="anonymous" />`)
+    .map(i => `<img id="example-image-${i}" src="https://localhost:${PORT}/img/${codetgt}/${i}" crossorigin="anonymous" />`)
     .join('\n    ');
 
   const entityTags = pages.map((i, idx) => `
@@ -209,5 +223,5 @@ function generateMindARSlidesHtml({ codetgt, pages }) {
 }
 
 function generateMindARGLTFModel({codetgt,pages}){
-  const mindUrl = `http://localhost:${PORT}/targets/${codetgt}`;
+  const mindUrl = `https://localhost:${PORT}/targets/${codetgt}`;
 }
