@@ -1,96 +1,100 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <link rel="stylesheet" href="../index.css" />
-    <meta charset="UTF-8" />
-    <title>Gerar arquivo .mind</title>
-    <script src="../scripts/dropbox-dist.js"></script>
-    <link rel="stylesheet" href="../dropbox.css">
-    <script type="module" src="../scripts/compilescript.js"></script>
-  </head>
-  <body>
-    <!-- Header -->
-    <header class="bg-blue-600 text-white shadow-lg">
-      <nav class="container mx-auto px-6 py-4">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center">
-            <a href="/" class="text-xl font-bold">Conversor MIND</a>
-          </div>
-          <div class="hidden md:flex items-center space-x-8">
-            <a href="https://github.com/lucasbraga3/LabDigital" class="hover:text-blue-200 transition-colors">Código fonte do projeto</a>
-          </div>
-        </div>
-      </nav>
-    </header>
-
-    <!-- Main Content -->
-    <main class="container mx-auto px-6 py-8">
-      <h2 class="text-2xl font-bold mb-4">Gerar targets.mind</h2>
-      <p class="mb-6 text-gray-600">Insira o código de 6 dígitos que será usado como nome do arquivo .mind:</p>
-
-      <label for="codetgt" class="block mb-2">Código (6 dígitos):</label>
-      <input type="text" id="codetgt" maxlength="6" class="border p-2 rounded mb-4 w-48" placeholder="Ex: 123456" />
-
-      <form class="dropzone" id="dropzone">
-        <div class="dz-message">Clique ou solte imagens .png ou .jpg aqui</div>
-      </form>
-
-      <button id="startButton" class="button-89 mt-4">Enviar</button>
-      <span id="progress" class="block mt-2 text-gray-600"></span>
-      <div id="container" class="mt-4"></div>
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-gray-100 mt-12 py-8 border-t">
-      <div class="container mx-auto px-6">
-        <div class="md:grid md:grid-cols-2 md:gap-15">
-          <div class="mb-8 md:mb-0">
-            <h3 class="text-lg font-semibold mb-4">Sobre o Conversor</h3>
-            <p class="text-gray-600">Ferramenta para conversão de imagens em arquivos .mind para sistemas embarcados.</p>
-          </div>
-          <!-- <div class="mb-8 md:mb-0">
-            <h3 class="text-lg font-semibold mb-4">Documentação</h3>
-            <ul class="space-y-2">
-              <li><a href="/formatos" class="text-blue-600 hover:text-blue-800">Formatos Suportados</a></li>
-              <li><a href="/exemplos" class="text-blue-600 hover:text-blue-800">Exemplos</a></li>
-              <li><a href="/tutorial" class="text-blue-600 hover:text-blue-800">Tutorial</a></li>
-            </ul>
-          </div> -->
-          <div>
-            <h3 class="text-lg font-semibold mb-4">Instituição
-            </h3>
-            <p class="text-gray-600">
-              Universidade Federa Rural do Rio de Janeiro<br>
-              Instituto Multidisciplinar<br>
-            </p>
-          </div>
-        </div>
-        <div class="mt-8 pt-8 border-t text-center text-gray-600">
-          <p>Laboratório Digital de Realidade Aumentada.</p>
+<head>
+  <meta charset="UTF-8" />
+  <title>Gerar arquivo .mind</title>
+  <link rel="stylesheet" href="../index.css" />
+  <link rel="stylesheet" href="../dropbox.css" />
+  <script src="../scripts/dropbox-dist.js"></script>
+  <script type="module" src="../scripts/compilescript.js"></script>
+</head>
+<body>
+  <!-- Header -->
+  <header class="bg-blue-600 text-white shadow-lg">
+    <nav class="container mx-auto px-6 py-4">
+      <div class="flex items-center justify-between">
+        <a href="/" class="text-xl font-bold">Conversor MIND</a>
+        <div class="hidden md:flex items-center space-x-8">
+          <a href="https://github.com/lucasbraga3/LabDigital" class="hover:text-blue-200 transition-colors">Código fonte do projeto</a>
         </div>
       </div>
-    </footer>
+    </nav>
+  </header>
 
-    <script>
-      Dropzone.autoDiscover = false;
-    
-      const dropzone = new Dropzone("#dropzone", {
-        url: "#",
-        autoProcessQueue: false,
-        addRemoveLinks: true,
-        acceptedFiles: ".png,.jpg,.jpeg",
-      });
-    
-      document.getElementById("startButton").addEventListener("click", () => {
-        const codetgt = document.getElementById("codetgt").value.trim();
-    
-        if (dropzone.files.length === 0) {
-          alert("Adicione pelo menos uma imagem.");
-          return;
-        }
-    
-        window.compileFiles(dropzone.files, codetgt || null);
-      });
-    </script>
-  </body>
+  <!-- Main Content -->
+  <main class="container mx-auto px-6 py-8">
+    <h2 class="text-2xl font-bold mb-4">Gerar arquivo .mind</h2>
+    <p class="mb-6 text-gray-600">
+      Este conversor permite transformar uma imagem em um arquivo <code>.mind</code> para ser utilizado como target no MindAR.
+    </p>
+
+    <p class="mb-4 font-semibold text-gray-700">Instruções:</p>
+    <ul class="list-disc list-inside mb-6 text-gray-700">
+      <li>Insira um código com pelo menos 2 caracteres (será o nome do arquivo gerado)</li>
+      <li>Adicione uma imagem no formato <strong>.png</strong> ou <strong>.jpg</strong></li>
+      <li>A imagem deve ter boa qualidade e contraste para melhor reconhecimento</li>
+    </ul>
+
+    <label for="codetgt" class="block mb-2 font-medium">Código do arquivo .mind:</label>
+    <input type="text" id="codetgt" maxlength="32" class="border p-2 rounded mb-4 w-48" placeholder="Ex: target01" />
+
+    <form class="dropzone" id="dropzone">
+      <div class="dz-message">Clique ou solte uma imagem .png ou .jpg aqui</div>
+    </form>
+
+    <button id="startButton" class="button-89 mt-4">Gerar .mind</button>
+    <span id="progress" class="block mt-2 text-gray-600"></span>
+    <div id="container" class="mt-4"></div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-100 mt-12 py-8 border-t">
+    <div class="container mx-auto px-6">
+      <div class="md:grid md:grid-cols-2 md:gap-15">
+        <div class="mb-8 md:mb-0">
+          <h3 class="text-lg font-semibold mb-4">Sobre o Conversor</h3>
+          <p class="text-gray-600">Ferramenta para conversão de imagens em arquivos .mind para realidade aumentada.</p>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-4">Instituição</h3>
+          <p class="text-gray-600">
+            Universidade Federal Rural do Rio de Janeiro<br>
+            Instituto Multidisciplinar
+          </p>
+        </div>
+      </div>
+      <div class="mt-8 pt-8 border-t text-center text-gray-600">
+        <p>Laboratório Digital de Realidade Aumentada.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    Dropzone.autoDiscover = false;
+
+    const dropzone = new Dropzone("#dropzone", {
+      url: "#",
+      autoProcessQueue: false,
+      addRemoveLinks: true,
+      maxFiles: 1,
+      acceptedFiles: ".png,.jpg,.jpeg",
+    });
+
+    document.getElementById("startButton").addEventListener("click", () => {
+      const codetgt = document.getElementById("codetgt").value.trim();
+
+      if (codetgt.length < 2) {
+        alert("Por favor, insira um código com pelo menos 2 caracteres.");
+        return;
+      }
+
+      if (dropzone.files.length === 0) {
+        alert("Adicione uma imagem para converter.");
+        return;
+      }
+
+      window.compileFiles(dropzone.files, codetgt);
+    });
+  </script>
+</body>
 </html>

@@ -1,105 +1,312 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <link rel="stylesheet" href="../index.css" />
-    <meta charset="UTF-8" />
-    <title>Enviar Slides</title>
-    <script src="../scripts/dropbox-dist.js"></script>
-    <link rel="stylesheet" href="../dropbox.css">
-  </head>
-  <body>
-    <!-- Header -->
-    <header class="bg-blue-600 text-white shadow-lg">
-      <nav class="container mx-auto px-6 py-4">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center">
-            <a href="/" class="text-xl font-bold">Gerenciador de Slides</a>
-          </div>
-          <div class="hidden md:flex items-center space-x-8">
-            <a href="https://github.com/lucasbraga3/LabDigital" class="hover:text-blue-200 transition-colors">Código fonte do projeto</a>
-          </div>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Enviar Slides ou Modelos 3D</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="../index.css" />
+  <link rel="stylesheet" href="../dropbox.css" />
+  <style>
+    body { background: #f7fafc; }
+    .button-89.active, .button-89:focus-visible {
+      background-color: #1e40af !important;
+      color: #fff !important;
+      border-color: #1e3a8a !important;
+      outline: 2px solid #1e40af;
+      outline-offset: 2px;
+    }
+    .file-list { margin-top: 12px; }
+    .file-list li { font-size: 14px; color: #444; margin-bottom: 2px; word-break: break-all;}
+    .progress-bar-bg {
+      width: 100%; background: #e5e7eb; border-radius: 8px; height: 16px; margin-top: 12px;
+    }
+    .progress-bar-fg {
+      height: 100%; background: #2563eb; border-radius: 8px; width: 0%; transition: width .3s;
+    }
+    .msg-err { color: #dc2626; font-size: 15px; margin-top: 10px; }
+    .msg-success { color: #16a34a; font-size: 15px; margin-top: 10px; }
+    @media (max-width: 600px) {
+      .container { padding: 0 10px; }
+      .w-48 { width: 90vw; min-width: 120px; }
+      .dropzone { min-height: 90px !important; }
+      h2 { font-size: 1.2rem; }
+      .button-89 { font-size: 13px; padding: 5px 12px; }
+    }
+    input:focus { outline: 2px solid #1e40af; }
+  </style>
+  <script src="../scripts/dropbox-dist.js"></script>
+</head>
+<body>
+  <header class="bg-blue-600 text-white shadow-lg">
+    <nav class="container mx-auto px-6 py-4 flex flex-col md:flex-row md:justify-between items-center">
+      <a href="/" class="text-xl font-bold">Gerenciador de Slides</a>
+      <a href="https://github.com/lucasbraga3/LabDigital" class="hover:text-blue-200 transition-colors mt-2 md:mt-0">Código fonte do projeto</a>
+    </nav>
+  </header>
+
+  <main class="container mx-auto px-6 py-8" style="max-width:600px;">
+    <h2 class="text-2xl font-bold mb-4">Enviar conteúdo RA</h2>
+    <p class="mb-4 text-gray-600">
+      Escolha o modo de envio, insira um código (mínimo 2 caracteres) e selecione seus arquivos.
+    </p>
+
+    <div class="mb-4 flex gap-2">
+      <button id="btnSlides" type="button" class="button-89 active" tabindex="0">Slides</button>
+      <button id="btnModel" type="button" class="button-89" tabindex="0">Modelo 3D</button>
+    </div>
+
+    <div class="mb-4">
+      <strong>Instruções:</strong>
+      <ul id="instructions" class="list-disc list-inside text-gray-700 ml-5">
+        <li>Envie apenas um arquivo <strong>.pdf</strong>, <strong>.png</strong> ou <strong>.pptx</strong></li>
+        <li>O sistema converterá automaticamente em imagens para RA</li>
+      </ul>
+    </div>
+
+    <label for="codetgt" class="block mb-2">Código:</label>
+    <input type="text" id="codetgt" maxlength="32" class="border p-2 rounded mb-4 w-48" placeholder="Ex: abc123" autocomplete="off" />
+
+    <form class="dropzone" id="slideDropzone" style="min-height:100px;">
+      <div class="dz-message">Clique ou solte arquivos aqui</div>
+    </form>
+
+    <ul id="fileList" class="file-list"></ul>
+
+    <div class="progress-bar-bg" style="display:none">
+      <div class="progress-bar-fg" id="progressBar"></div>
+    </div>
+    <button id="uploadButton" class="button-89 mt-4">Enviar</button>
+    <div id="msg" class="mt-2" role="alert"></div>
+  </main>
+
+  <footer class="bg-gray-100 mt-12 py-8 border-t">
+    <div class="container mx-auto px-6">
+      <div class="md:grid md:grid-cols-2 md:gap-15">
+        <div class="mb-8 md:mb-0">
+          <h3 class="text-lg font-semibold mb-4">Sobre o Sistema</h3>
+          <p class="text-gray-600">Plataforma de envio e conversão para realidade aumentada de slides ou modelos 3D.</p>
         </div>
-      </nav>
-    </header>
-
-    <!-- Main Content -->
-    <main class="container mx-auto px-6 py-8">
-      <h2 class="text-2xl font-bold mb-4">Enviar arquivos de slides</h2>
-      <p class="mb-6 text-gray-600">Digite o código de 6 dígitos que você recebeu e envie os arquivos correspondentes.</p>
-
-      <label for="codetgt" class="block mb-2">Código:</label>
-      <input type="text" id="codetgt" maxlength="6" class="border p-2 rounded mb-4 w-48" placeholder="Ex: 123456" />
-      
-      <form action="localhost:3000/upload/slides" class="dropzone" id="slideDropzone">
-        <div class="dz-message">Clique ou solte arquivos <strong>.pdf, .png, .pptx</strong> aqui</div>
-      </form>
-
-      <button id="uploadButton" class="button-89 mt-4">Enviar</button>
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-gray-100 mt-12 py-8 border-t">
-      <div class="container mx-auto px-6">
-        <div class="md:grid md:grid-cols-2 md:gap-15">
-          <div class="mb-8 md:mb-0">
-            <h3 class="text-lg font-semibold mb-4">Sobre o Sistema</h3>
-            <p class="text-gray-600">Plataforma envio e conversão para RA de apresentações em formato de slide.</p>
-          </div>
-  
-          <div>
-            <h3 class="text-lg font-semibold mb-4">Instituição
-            </h3>
-            <p class="text-gray-600">
-              Universidade Federa Rural do Rio de Janeiro<br>
-              Instituto Multidisciplinar<br>
-            </p>
-          </div>
-        </div>
-        <div class="mt-8 pt-8 border-t text-center text-gray-600">
-          <p>Laboratório Digital de Realidade Aumentada.</p>
+        <div>
+          <h3 class="text-lg font-semibold mb-4">Instituição</h3>
+          <p class="text-gray-600">
+            Universidade Federal Rural do Rio de Janeiro<br>
+            Instituto Multidisciplinar
+          </p>
         </div>
       </div>
-    </footer>
+      <div class="mt-8 pt-8 border-t text-center text-gray-600">
+        <p>Laboratório Digital de Realidade Aumentada</p>
+      </div>
+    </div>
+  </footer>
 
-    <script>
-      Dropzone.autoDiscover = false;
+  <script>
+    Dropzone.autoDiscover = false;
+    let currentMode = "slides";
+    const codetgtInput = document.getElementById("codetgt");
+    const instructions = document.getElementById("instructions");
+    const fileList = document.getElementById("fileList");
+    const msgDiv = document.getElementById("msg");
+    const progressBg = document.querySelector('.progress-bar-bg');
+    const progressBar = document.getElementById("progressBar");
 
-      const slideDropzone = new Dropzone("#slideDropzone", {
-        url: "https://localhost:3000/upload/slides",
-        paramName: "slides",
-        maxFiles: 1,
-        autoProcessQueue: false,
-        acceptedFiles: ".pdf,.png,.pptx",
-        addRemoveLinks: true,
-        clickable: true,
-        init: function () {
-          this.on("sending", function (file, xhr, formData) {
-            const codetgt = document.getElementById("codetgt").value.trim();
-            formData.append("codetgt", codetgt);
-          });
+    // Função para atualizar visualmente os arquivos na lista
+    function updateFileList() {
+      fileList.innerHTML = "";
+      for (const file of slideDropzone.files) {
+        const li = document.createElement("li");
+        li.textContent = file.name + " (" + Math.round(file.size / 1024) + " KB)";
+        fileList.appendChild(li);
+      }
+    }
 
-          this.on("queuecomplete", function () {
-            alert("✅ Arquivo enviado com sucesso!");
-            this.removeAllFiles();
-          });
+    // Recria Dropzone ao alternar o modo para garantir regras corretas
+    let slideDropzone = null;
+    function initDropzone(options) {
+      if (slideDropzone) {
+        slideDropzone.destroy();
+      }
+      slideDropzone = new Dropzone("#slideDropzone", options);
+    }
+    function getDropzoneOptions(mode) {
+      if (mode === "model") {
+        return {
+          url: "/dummy-url-model", // <<< ADICIONE ISTO!
+          autoProcessQueue: false,
+          uploadMultiple: true,
+          parallelUploads: 10,
+          acceptedFiles: ".gltf,.glb,.bin,.png,.jpg,.jpeg",
+          addRemoveLinks: true,
+          clickable: true,
+          init: function () {
+            this.on("addedfile", updateFileList);
+            this.on("removedfile", updateFileList);
+          }
         }
-      });
+      } else {
+        return {
+          url: "/dummy-url-slides", // <<< ADICIONE ISTO!
+          autoProcessQueue: false,
+          uploadMultiple: false,
+          parallelUploads: 1,
+          acceptedFiles: ".pdf,.pptx,.png,.jpg,.jpeg",
+          addRemoveLinks: true,
+          clickable: true,
+          init: function () {
+            this.on("addedfile", updateFileList);
+            this.on("removedfile", updateFileList);
+          }
+        }
+      }
+    }
 
-      document.getElementById("uploadButton").addEventListener("click", () => {
-        const codetgt = document.getElementById("codetgt").value.trim();
+    // Inicializa modo padrão
+    initDropzone(getDropzoneOptions("slides"));
 
-        if (codetgt.length < 2) {
-          alert("Por favor, insira um código de pelo menos 2 dígitos.");
+    document.getElementById("btnSlides").addEventListener("click", () => {
+      currentMode = "slides";
+      initDropzone(getDropzoneOptions("slides"));
+      instructions.innerHTML = `
+        <li>Envie apenas um arquivo <strong>.pdf</strong>, <strong>.png</strong> ou <strong>.pptx</strong></li>
+        <li>O sistema converterá automaticamente em imagens para RA</li>`;
+      setActiveButton("btnSlides");
+      msgDiv.textContent = "";
+      fileList.innerHTML = "";
+    });
+
+    document.getElementById("btnModel").addEventListener("click", () => {
+      currentMode = "model";
+      initDropzone(getDropzoneOptions("model"));
+      instructions.innerHTML = `
+        <li>Inclua o arquivo <strong>.gltf</strong> ou <strong>.glb</strong></li>
+        <li>Inclua também os arquivos auxiliares como <strong>.bin</strong>, <strong>.png</strong>, <strong>.jpg</strong></li>
+        <li>Todos os arquivos devem ser enviados juntos</li>`;
+      setActiveButton("btnModel");
+      msgDiv.textContent = "";
+      fileList.innerHTML = "";
+    });
+
+    function setActiveButton(activeId) {
+      document.getElementById("btnSlides").classList.remove("active");
+      document.getElementById("btnModel").classList.remove("active");
+      document.getElementById(activeId).classList.add("active");
+    }
+
+    document.getElementById("uploadButton").addEventListener("click", async () => {
+      msgDiv.textContent = "";
+      msgDiv.className = "";
+      progressBar.style.width = "0%";
+      progressBg.style.display = "none";
+
+      const codetgt = codetgtInput.value.trim();
+      if (codetgt.length < 2) {
+        msgDiv.textContent = "Por favor, insira um código com pelo menos 2 caracteres.";
+        msgDiv.className = "msg-err";
+        return;
+      }
+
+      if (slideDropzone.files.length === 0) {
+        msgDiv.textContent = "Adicione ao menos um arquivo para enviar.";
+        msgDiv.className = "msg-err";
+        return;
+      }
+
+      // Validação
+      if (currentMode === "slides") {
+        if (slideDropzone.files.length !== 1) {
+          msgDiv.textContent = "Envie apenas UM arquivo no modo Slides.";
+          msgDiv.className = "msg-err";
           return;
         }
-
-        if (slideDropzone.files.length === 0) {
-          alert("Adicione pelo menos um arquivo para enviar.");
+        const ext = slideDropzone.files[0].name.split(".").pop().toLowerCase();
+        if (!["pdf", "pptx", "png", "jpg", "jpeg"].includes(ext)) {
+          msgDiv.textContent = "Arquivo inválido. Use .pdf, .pptx, .png, .jpg ou .jpeg.";
+          msgDiv.className = "msg-err";
           return;
         }
+      }
+      if (currentMode === "model") {
+        const hasModel = slideDropzone.files.some(f =>
+          ["gltf", "glb"].includes(f.name.split(".").pop().toLowerCase())
+        );
+        if (!hasModel) {
+          msgDiv.textContent = "Inclua pelo menos um arquivo .gltf ou .glb no envio.";
+          msgDiv.className = "msg-err";
+          return;
+        }
+      }
 
-        slideDropzone.processQueue();
-      });
-    </script>
-  </body>
+      // Prepara FormData
+      const formData = new FormData();
+      formData.append("codetgt", codetgt);
+
+      if (currentMode === "model") {
+        for (const file of slideDropzone.files) {
+          formData.append("files", file);
+        }
+      } else {
+        formData.append("slides", slideDropzone.files[0]);
+      }
+
+      const endpoint = currentMode === "model"
+        ? "https://localhost:3000/upload/model"
+        : "https://localhost:3000/upload/slides";
+
+      // Barra de progresso
+      progressBg.style.display = "block";
+      progressBar.style.width = "5%";
+
+      try {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", endpoint, true);
+
+        xhr.upload.onprogress = function (evt) {
+          if (evt.lengthComputable) {
+            const percent = Math.round((evt.loaded / evt.total) * 100);
+            progressBar.style.width = percent + "%";
+          }
+        };
+
+        xhr.onload = function () {
+          progressBg.style.display = "none";
+          slideDropzone.removeAllFiles();
+
+          if (xhr.status === 200) {
+            msgDiv.textContent = "Arquivo enviado com sucesso!";
+            msgDiv.className = "msg-success";
+          } else {
+            let message = "Erro ao enviar arquivo.";
+            try {
+              const res = JSON.parse(xhr.responseText);
+              if (res && res.message) message = res.message;
+            } catch {}
+            msgDiv.textContent = message;
+            msgDiv.className = "msg-err";
+          }
+        };
+
+        xhr.onerror = function () {
+          progressBg.style.display = "none";
+          msgDiv.textContent = "Falha ao enviar os arquivos.";
+          msgDiv.className = "msg-err";
+        };
+
+        xhr.send(formData);
+
+      } catch (err) {
+        progressBg.style.display = "none";
+        msgDiv.textContent = "Falha ao enviar os arquivos.";
+        msgDiv.className = "msg-err";
+      }
+    });
+
+    // Acessibilidade: permitir tab nos botões e foco visual
+    document.getElementById("btnSlides").addEventListener("keyup", e => {
+      if (e.key === "Enter" || e.key === " ") document.getElementById("btnSlides").click();
+    });
+    document.getElementById("btnModel").addEventListener("keyup", e => {
+      if (e.key === "Enter" || e.key === " ") document.getElementById("btnModel").click();
+    });
+  </script>
+</body>
 </html>

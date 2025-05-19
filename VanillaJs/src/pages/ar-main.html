@@ -16,28 +16,45 @@
     <button id="example-stop-button" class="cursor-pointer rounded-md bg-neutral-950 px-1 py-0.5 text-[10px] text-white border border-neutral-800 shadow-sm shadow-neutral-500/20 transition active:scale-[.95] hover:bg-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-500">Stop</button>
   </div>
 
-  <div id="ar-container" style="flex : 1; display: flex; justify-content: center; align-items: center; width: 100%; height: 100vh;">
+  <div id="ar-container" style="flex: 1; display: flex; justify-content: center; align-items: center; width: 100%; height: 100vh;">
     <!-- Cenas AR serão carregadas aqui -->
   </div>
+
   <script type="module">
     import { initARControls } from "../scripts/ar-script.js";
 
     (async () => {
       const container = document.getElementById("ar-container");
       container.innerHTML = "";
-      const code = prompt("Digite o código da cena AR: ");
-      console.log(code);
-      try {
-        // const listRes = await fetch("http://localhost:3000/slides");
-        // if (!listRes.ok) throw new Error(`Status ${listRes.status}`);
-        const res = await fetch(`https://localhost:3000/slides/${code}`);
-        container.innerHTML = res.ok ? await res.text() : "<p style='color:red'>Falha ao carregar cena AR, verifique seu código.</p>";
-        // Initialize AR controls after loading the scenes
-        initARControls();
 
-      } catch (err) {
-        console.error("Erro ao carregar cenas AR:", err);
-        container.innerHTML = "<p style='color:red'>Falha ao carregar cenas AR.</p>";
+      const code = prompt("Digite o código da cena AR: ");
+      if (!code || code.trim().length < 2) {
+        container.innerHTML = "<p style='color:red'>Código inválido.</p>";
+        return;
+      }
+
+      const urls = [
+        `https://localhost:3000/slides/${code}`,
+        `https://localhost:3000/model/${code}`
+      ];
+
+      let success = false;
+      for (let i = 0; i < urls.length; i++) {
+        try {
+          const res = await fetch(urls[i]);
+          if (res.ok) {
+            container.innerHTML = await res.text();
+            initARControls();
+            success = true;
+            break;
+          }
+        } catch (err) {
+          console.warn(`Erro ao tentar carregar ${urls[i]}:`, err);
+        }
+      }
+
+      if (!success) {
+        container.innerHTML = "<p style='color:red'>Falha ao carregar cena AR, verifique seu código.</p>";
       }
     })();
   </script>
