@@ -5,10 +5,16 @@
   <link rel="stylesheet" href="../index.css" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>AR Main</title>
+  <style>
+    @media (max-width: 600px) {
+      .inline-flex { flex-direction: column; gap: 5px; left: 2vw !important; top: 2vh !important; }
+      #ar-container { padding-top: 70px; }
+    }
+    body { margin:0; background: #101012; }
+  </style>
 </head>
-
 <body>
-  <div style="position: absolute; z-index: 1000;" class="inline-flex gap-x-1 origin-left scale-90">
+  <div style="position: absolute; z-index: 1000; left: 24px; top: 16px;" class="inline-flex gap-x-1 origin-left scale-90">
     <button id="example-start-button" class="cursor-pointer rounded-md bg-neutral-950 px-1 py-0.5 text-[10px] text-white border border-neutral-800 shadow-sm shadow-neutral-500/20 transition active:scale-[.95] hover:bg-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-500">Start</button>
     <button id="example-pause-button" class="cursor-pointer rounded-md bg-neutral-950 px-1 py-0.5 text-[10px] text-white border border-neutral-800 shadow-sm shadow-neutral-500/20 transition active:scale-[.95] hover:bg-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-500">Pause</button>
     <button id="example-pause-keep-video-button" class="cursor-pointer rounded-md bg-neutral-950 px-1 py-0.5 text-[10px] text-white border border-neutral-800 shadow-sm shadow-neutral-500/20 transition active:scale-[.95] hover:bg-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-500">Pause (keep)</button>
@@ -16,7 +22,7 @@
     <button id="example-stop-button" class="cursor-pointer rounded-md bg-neutral-950 px-1 py-0.5 text-[10px] text-white border border-neutral-800 shadow-sm shadow-neutral-500/20 transition active:scale-[.95] hover:bg-neutral-900 focus:outline-none focus:ring-1 focus:ring-neutral-500">Stop</button>
   </div>
 
-  <div id="ar-container" style="flex: 1; display: flex; justify-content: center; align-items: center; width: 100%; height: 100vh;">
+  <div id="ar-container" style="flex:1;display:flex;justify-content:center;align-items:center;width:100%;height:100vh;">
     <!-- Cenas AR serão carregadas aqui -->
   </div>
 
@@ -26,22 +32,23 @@
     (async () => {
       const container = document.getElementById("ar-container");
       container.innerHTML = "";
-
-      const code = prompt("Digite o código da cena AR: ");
-      if (!code || code.trim().length < 2) {
-        container.innerHTML = "<p style='color:red'>Código inválido.</p>";
+      let code = prompt("Digite o código da cena AR: ");
+      code = code ? code.trim() : "";
+      if (!code || code.length < 2) {
+        container.innerHTML = "<p style='color:red;text-align:center;'>Código inválido.</p>";
         return;
       }
 
+      // Primeiro tenta carregar slides, depois 3D
       const urls = [
         `https://localhost:3000/slides/${code}`,
         `https://localhost:3000/model/${code}`
       ];
 
       let success = false;
-      for (let i = 0; i < urls.length; i++) {
+      for (const url of urls) {
         try {
-          const res = await fetch(urls[i]);
+          const res = await fetch(url);
           if (res.ok) {
             container.innerHTML = await res.text();
             initARControls();
@@ -49,12 +56,12 @@
             break;
           }
         } catch (err) {
-          console.warn(`Erro ao tentar carregar ${urls[i]}:`, err);
+          console.warn(`Erro ao tentar carregar ${url}:`, err);
         }
       }
 
       if (!success) {
-        container.innerHTML = "<p style='color:red'>Falha ao carregar cena AR, verifique seu código.</p>";
+        container.innerHTML = "<p style='color:red;text-align:center;'>Falha ao carregar cena AR, verifique seu código.</p>";
       }
     })();
   </script>

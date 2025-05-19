@@ -1,50 +1,59 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8" />
   <title>Gerar arquivo .mind</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="../index.css" />
   <link rel="stylesheet" href="../dropbox.css" />
+  <style>
+    .msg-err { color: #dc2626; font-size: 15px; margin-top: 10px; }
+    .msg-success { color: #16a34a; font-size: 15px; margin-top: 10px; }
+    .file-list { margin-top: 12px; }
+    .file-list li { font-size: 14px; color: #444; margin-bottom: 2px; word-break: break-all;}
+    @media (max-width: 600px) {
+      .container { padding: 0 10px; }
+      .w-48 { width: 90vw; min-width: 120px; }
+      .dropzone { min-height: 90px !important; }
+      h2 { font-size: 1.2rem; }
+      .button-89 { font-size: 13px; padding: 5px 12px; }
+    }
+    input:focus { outline: 2px solid #1e40af; }
+  </style>
   <script src="../scripts/dropbox-dist.js"></script>
   <script type="module" src="../scripts/compilescript.js"></script>
 </head>
 <body>
   <!-- Header -->
   <header class="bg-blue-600 text-white shadow-lg">
-    <nav class="container mx-auto px-6 py-4">
-      <div class="flex items-center justify-between">
-        <a href="/" class="text-xl font-bold">Conversor MIND</a>
-        <div class="hidden md:flex items-center space-x-8">
-          <a href="https://github.com/lucasbraga3/LabDigital" class="hover:text-blue-200 transition-colors">Código fonte do projeto</a>
-        </div>
-      </div>
+    <nav class="container mx-auto px-6 py-4 flex flex-col md:flex-row md:justify-between items-center">
+      <a href="/" class="text-xl font-bold">Conversor MIND</a>
+      <a href="https://github.com/lucasbraga3/LabDigital" class="hover:text-blue-200 transition-colors mt-2 md:mt-0">Código fonte do projeto</a>
     </nav>
   </header>
 
   <!-- Main Content -->
-  <main class="container mx-auto px-6 py-8">
+  <main class="container mx-auto px-6 py-8" style="max-width:600px;">
     <h2 class="text-2xl font-bold mb-4">Gerar arquivo .mind</h2>
     <p class="mb-6 text-gray-600">
-      Este conversor permite transformar uma imagem em um arquivo <code>.mind</code> para ser utilizado como target no MindAR.
+      Transforme uma imagem <strong>.png</strong> ou <strong>.jpg</strong> em um arquivo <code>.mind</code> para ser usado como target MindAR.
     </p>
-
-    <p class="mb-4 font-semibold text-gray-700">Instruções:</p>
     <ul class="list-disc list-inside mb-6 text-gray-700">
-      <li>Insira um código com pelo menos 2 caracteres (será o nome do arquivo gerado)</li>
-      <li>Adicione uma imagem no formato <strong>.png</strong> ou <strong>.jpg</strong></li>
-      <li>A imagem deve ter boa qualidade e contraste para melhor reconhecimento</li>
+      <li>Insira um código com pelo menos 2 caracteres</li>
+      <li>Adicione uma imagem de boa qualidade e contraste (.png ou .jpg)</li>
     </ul>
 
     <label for="codetgt" class="block mb-2 font-medium">Código do arquivo .mind:</label>
-    <input type="text" id="codetgt" maxlength="32" class="border p-2 rounded mb-4 w-48" placeholder="Ex: target01" />
+    <input type="text" id="codetgt" maxlength="32" class="border p-2 rounded mb-4 w-48" placeholder="Ex: target01" autocomplete="off" />
 
-    <form class="dropzone" id="dropzone">
+    <form class="dropzone" id="dropzone" style="min-height:100px;">
       <div class="dz-message">Clique ou solte uma imagem .png ou .jpg aqui</div>
     </form>
-
+    <ul id="fileList" class="file-list"></ul>
     <button id="startButton" class="button-89 mt-4">Gerar .mind</button>
     <span id="progress" class="block mt-2 text-gray-600"></span>
     <div id="container" class="mt-4"></div>
+    <div id="msg" class="mt-2" role="alert"></div>
   </main>
 
   <!-- Footer -->
@@ -72,29 +81,52 @@
   <script>
     Dropzone.autoDiscover = false;
 
-    const dropzone = new Dropzone("#dropzone", {
-      url: "#",
-      autoProcessQueue: false,
-      addRemoveLinks: true,
-      maxFiles: 1,
-      acceptedFiles: ".png,.jpg,.jpeg",
-    });
+    document.addEventListener('DOMContentLoaded', function() {
+      const codetgtInput = document.getElementById("codetgt");
+      const fileList = document.getElementById("fileList");
+      const msgDiv = document.getElementById("msg");
 
-    document.getElementById("startButton").addEventListener("click", () => {
-      const codetgt = document.getElementById("codetgt").value.trim();
+      let dropzone = new Dropzone("#dropzone", {
+        url: "#",
+        autoProcessQueue: false,
+        maxFiles: 1,
+        acceptedFiles: ".png,.jpg,.jpeg",
+        addRemoveLinks: true,
+        clickable: true,
+        init: function () {
+          this.on("addedfile", updateFileList);
+          this.on("removedfile", updateFileList);
+        }
+      });
 
-      if (codetgt.length < 2) {
-        alert("Por favor, insira um código com pelo menos 2 caracteres.");
-        return;
+      function updateFileList() {
+        fileList.innerHTML = "";
+        for (const file of dropzone.files) {
+          const li = document.createElement("li");
+          li.textContent = file.name + " (" + Math.round(file.size / 1024) + " KB)";
+          fileList.appendChild(li);
+        }
       }
 
-      if (dropzone.files.length === 0) {
-        alert("Adicione uma imagem para converter.");
-        return;
-      }
-
-      window.compileFiles(dropzone.files, codetgt);
+      document.getElementById("startButton").addEventListener("click", () => {
+        msgDiv.textContent = "";
+        msgDiv.className = "";
+        const codetgt = codetgtInput.value.trim();
+        if (codetgt.length < 2) {
+          msgDiv.textContent = "Por favor, insira um código com pelo menos 2 caracteres.";
+          msgDiv.className = "msg-err";
+          return;
+        }
+        if (dropzone.files.length === 0) {
+          msgDiv.textContent = "Adicione uma imagem para converter.";
+          msgDiv.className = "msg-err";
+          return;
+        }
+        msgDiv.textContent = "Processando e enviando...";
+        window.compileFiles(dropzone.files, codetgt);
+      });
     });
   </script>
+
 </body>
 </html>
