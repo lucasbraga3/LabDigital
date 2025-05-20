@@ -53,7 +53,7 @@ const assetsStorage = multer.diskStorage({
     let codetgt = req.body.codetgt;
     if (Array.isArray(codetgt)) codetgt = codetgt[0];
     if (!codetgt) return cb(new Error("Missing codetgt"));
-    const modelDir = path.join(__dirname, 'public', 'models', codetgt);
+    const modelDir = path.join(__dirname, 'public');
     fs.mkdirSync(modelDir, { recursive: true });
     cb(null, modelDir);
   },
@@ -199,7 +199,7 @@ app.post('/upload/model', uploadAssetsDisk.array('files'), async (req, res) => {
     if (Array.isArray(codetgt)) codetgt = codetgt[0];
     if (!codetgt) return res.status(400).json({ success: false, message: "Missing codetgt" });
 
-    const modelsDir = path.join(__dirname, 'public', 'models', codetgt);
+    const modelsDir = path.join(__dirname, 'public');
     let mainModel = null;
 
     for (const file of req.files) {
@@ -214,6 +214,7 @@ app.post('/upload/model', uploadAssetsDisk.array('files'), async (req, res) => {
       if (file.originalname.endsWith('.gltf') || file.originalname.endsWith('.glb')) {
         mainModel = file.originalname;
       }
+      fs.unlinkSync(file.path)
     }
 
     if (!mainModel)
@@ -223,7 +224,7 @@ app.post('/upload/model', uploadAssetsDisk.array('files'), async (req, res) => {
     const html = generateMindARGLTFModel({
       codetgt,
       modelFilename: mainModel,
-      scale: "0.13 0.13 0.13",    // Diminui se estiver grande
+      scale: "0.05 0.05 0.05",    // Diminui se estiver grande
       position: "0 -0.14 0",      // Move para baixo se estiver alto/descentralizado
       rotation: "0 0 0"           // Gire se necessário
     });
