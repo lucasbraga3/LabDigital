@@ -1,2 +1,5 @@
 node_modules
 public
+.env
+.env.json
+env.json

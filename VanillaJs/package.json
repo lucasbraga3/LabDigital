@@ -23,7 +23,8 @@
     "axios": "^1.8.4",
     "mind-ar": "^1.2.5",
     "tailwindcss": "^4.1.6",
-    "vite-plugin-mkcert": "^1.17.8"
+    "vite-plugin-mkcert": "^1.17.8",
+    "@hyperbeam/web": "^0.0.22"
   },
   "devDependencies": {
     "vite": "^6.2.1"

@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <script src="../scripts/virtualcomp.mjs"></script>
   <title>AR Main</title>
   <style>
     /* CSS */
@@ -68,7 +69,7 @@
 
   <script type="module">
     import { initARControls } from "../scripts/ar-script.js";
-
+    import { startIframe } from  "../scripts/virtualcomp.mjs"
     (async () => {
       const container = document.getElementById("ar-container");
       container.innerHTML = "";
@@ -81,8 +82,8 @@
 
       // Primeiro tenta carregar slides, depois 3D
       const urls = [
-        `https://localhost:3000/slides/${code}`,
-        `https://localhost:3000/model/${code}`
+        `http://localhost:3000/slides/${code}`,
+        `http://localhost:3000/model/${code}`
       ];
 
       let success = false;
@@ -101,7 +102,40 @@
       }
 
       if (!success) {
-        container.innerHTML = "<p style='color:red;text-align:center;'>Falha ao carregar cena AR, verifique seu código.</p>";
+        const full = code.split('--')
+        const frame = full[1];
+        const codehere = full[0];
+        if(frame == 'iframe'){
+          container.innerHTML = `
+          <audio id="audio" autoplay></audio>
+          <a-scene mindar-image="imageTargetSrc: http://localhost:3000/targets/${codehere}" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+            <a-camera position="0 0 0" look-controls="enabled: false" cursor="fuse: false; rayOrigin: mouse;" raycaster="near: 10; far: 10000;"></a-camera>
+            <a-entity camera="active: true" position="0 1.6 0">
+            <a-entity
+                cursor="fuse: false; rayOrigin: mouse"
+                raycaster="objects: .hyperbeam; far: 20"
+                >
+            </a-entity>
+            <a-entity mindar-image-target="targetIndex: 0">
+              <a-plane
+                class="hyperbeam"
+                position="0 0 0"
+                rotation="0 0 0"
+                width="2.2"
+                height="1"
+                color="#000000"
+                sound="src: #audio; autoplay: true; refDistance: 0.2; rolloffFactor: 3"
+                hyperbeam
+                ></a-plane>      
+            </a-entity>
+          </a-scene>
+          <div id="hbcontainer"></div>`
+          startIframe();
+          initARControls();
+        }
+        else{
+          container.innerHTML = "<p style='color:red;text-align:center;'>Falha ao carregar cena AR, verifique seu código.</p>";
+        }
       }
     })();
   </script>
