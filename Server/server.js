@@ -1,5 +1,6 @@
 // server.js - Versão final para Slides e Modelos 3D com Redis, HTTPS e Upload robusto
 
+require('dotenv').config(); 
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
@@ -78,6 +79,105 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // --- ROUTES ---
 
+// server.js - Rota para garantir única sessão Hyperbeam com resposta JSON
+app.post('/api/hyperbeam/create-room', async (req, res) => {
+  const { initial_url } = req.body;
+  console.log('Criando/recuperando sessão Hyperbeam para URL:', initial_url);
+
+  try {
+    // 1. Listar sessões ativas
+    const listRes = await fetch('https://engine.hyperbeam.com/v0/vm', {
+      headers: { 'Authorization': `Bearer ${process.env.HYPERBEAM_KEY}` }
+    });
+
+    let sessions = [];
+    if (listRes.ok) {
+      const listData = await listRes.json();
+      console.log('Sessões Hyperbeam encontradas:', listData);
+      sessions = Array.isArray(listData.results) ? listData.results : [];
+    } else {
+      console.warn('Falha ao listar sessões Hyperbeam:', listRes.status, await listRes.text());
+    }
+
+    // 2. Se houver sessão ativa, obter detalhes e retornar JSON
+    if (sessions.length > 0) {
+      const existingId = sessions[0].id;
+      console.log('Usando sessão existente:', existingId);
+      const detailRes = await fetch(`https://engine.hyperbeam.com/v0/vm/${existingId}`, {
+        headers: { 'Authorization': `Bearer ${process.env.HYPERBEAM_KEY}` }
+      });
+      if (detailRes.ok) {
+        const detailData = await detailRes.json();
+        console.log('Embed URL da sessão existente:', detailData.embed_url);
+        return res.json({
+          sessionId: detailData.session_id,
+          embedURL: detailData.embed_url,
+          adminToken: detailData.admin_token
+        });
+      } else {
+        console.warn('Falha ao obter detalhes da sessão:', detailRes.status, await detailRes.text());
+      }
+    }
+
+    // 3. Se não houver sessão ativa ou falhar ao obter detalhes, criar nova sessão
+    const createRes = await fetch('https://engine.hyperbeam.com/v0/vm', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.HYPERBEAM_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ start_url: initial_url })
+    });
+    const createData = await createRes.json();
+    if (!createRes.ok) {
+      console.error('Erro criando nova sessão Hyperbeam:', createRes.status, createData);
+      return res.status(createRes.status).json(createData);
+    }
+
+    console.log('Nova sessão criada:', createData.session_id);
+    return res.json({
+      sessionId: createData.session_id,
+      embedURL: createData.embed_url,
+      adminToken: createData.admin_token
+    });
+
+  } catch (err) {
+    console.error('Erro interno ao criar/recuperar sessão Hyperbeam:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// Rota para encerrar a sala Hyperbeam
+app.post('/api/hyperbeam/terminate-room', async (req, res) => {
+  const { session_id } = req.body;
+  console.log('Encerrando sala Hyperbeam:', session_id);
+  try {
+    const hbRes = await fetch(`https://engine.hyperbeam.com/v0/vm/${session_id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${process.env.HYPERBEAM_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!hbRes.ok) {
+      const errorData = await hbRes.json();
+      return res.status(hbRes.status).json(errorData);
+    }
+
+    console.log('Sala Hyperbeam encerrada com sucesso:', session_id);
+    return res.status(200).json({ message: 'Sala encerrada com sucesso' });
+  } catch (err) {
+    console.error('Erro ao encerrar sala Hyperbeam:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// Rota de teste para verificar se o servidor está rodando
+app.get('/', (req, res) => {
+  res.send('Servidor rodando! Use /upload/target para enviar um arquivo .mind');
+});
+
 // Upload de TARGET (.mind para AR)
 app.post('/upload/target', upload.single('targets'), async (req, res) => {
   let codetgt = req.body.codetgt || Math.floor(Math.random() * 1000000) + 1;
@@ -118,6 +218,7 @@ app.post('/upload/slides', uploadSlides.single('slides'), async (req, res) => {
     const ext = path.extname(filePath).toLowerCase();
 
     let pages = [];
+    let pagesCount = 0;
 
     // Se for PDF, converte para imagens e salva cada página no Redis
     if (ext === '.pdf') {
@@ -143,6 +244,8 @@ app.post('/upload/slides', uploadSlides.single('slides'), async (req, res) => {
           break;
         }
       }
+      pagesCount = pages.length;
+
       fs.unlinkSync(filePath); // Remove PDF original
     } else {
       // PNG, JPG, PPTX etc: salva como uma página só (simples)
@@ -153,7 +256,11 @@ app.post('/upload/slides', uploadSlides.single('slides'), async (req, res) => {
     }
 
     // Gera HTML AR para os slides enviados
-    const gencode = generateMindARSlidesHtml({ codetgt, pages });
+    console.log(`Gerando HTML para slides: ${codetgt}, páginas: ${pages.join(', ')}`);
+    const gencode = generateMindARSlidesHtml({ codetgt, pages, pagesCount });
+    if (!gencode) {
+      return res.status(500).json({ success: false, message: "Failed to generate HTML for slides." });
+    }
     const htmlBase64 = Buffer.from(gencode).toString('base64');
     await redis.set(`slides:${codetgt}`, htmlBase64, 'EX', 10800);
     res.status(200).json({ success: true, codetgt, images: pages, html: `/slides/${codetgt}/${codetgt}.html` });
@@ -286,7 +393,7 @@ app.use((err, req, res, next) => {
 
 
 // Funções utilitárias para gerar HTML AR
-function generateMindARSlidesHtml({ codetgt, pages }) {
+function generateMindARSlidesHtml({ codetgt, pages, pagesCount }) {
   const mindUrl = `http://localhost:${PORT}/targets/${codetgt}`;
   const arrowTags = [
     `<img id="img1" src="http://localhost:${PORT}/left-arrow.png" crossorigin="anonymous" />`,
@@ -297,24 +404,51 @@ function generateMindARSlidesHtml({ codetgt, pages }) {
     .map(i => `<img id="example-image-${i}" src="http://localhost:${PORT}/img/${codetgt}/${i}" crossorigin="anonymous" />`)
     .join('\n    ');
 
-  const entityTags = pages.map((i, idx) => `
-    <a-entity id="slide-${i}" class="slides" ${idx > 0 ? 'visible="false"' : 'visible="true"'}>
-      <a-image src="#example-image-${i}"></a-image>
-      <a-image class="clickable left-arrow"  src="#img1"  position="-0.7 0 0" height="0.15" width="0.15"></a-image>
-      <a-image class="clickable right-arrow" src="#img2" position=" 0.7 0 0" height="0.15" width="0.15"></a-image>
-    </a-entity>`).join('\n');
+    if (pagesCount === 0) {
+        console.warn('Nenhuma página encontrada para o codetgt:', codetgt);
+        return null; // Retorna null se não houver páginas
+    }
+    if (pagesCount === 1) {
+      console.log('Gerando HTML para slide único:', pages[0]);
 
-  return `
+        const entityTags = pages.map((i, idx) => `
+        <a-entity id="slide-${i}" class="slides" ${idx > 0 ? 'visible="false"' : 'visible="true"'}>
+          <a-image src="#example-image-${i}"></a-image>
+        </a-entity>`).join('\n');
+
+        return `
     <a-scene id="example-target" mindar-image="imageTargetSrc: ${mindUrl}; uiScanning: yes; autoStart: false;" color-space="sRGB" renderer="colorManagement: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
       <a-camera position="0 0 0" look-controls="enabled: false" cursor="fuse: false; rayOrigin: mouse;" raycaster="near: 10; far: 10000; objects: .clickable"></a-camera>
         <a-assets>
-          ${arrowTags}
           ${assetTags}
         </a-assets>
       <a-entity id="slides-container" mindar-image-target="targetIndex: 0">
         ${entityTags}
       </a-entity>
     </a-scene>`;
+    }
+    else if (pagesCount > 1) {
+      console.log('Gerando HTML para slides com múltiplas páginas:', pages);
+
+            const entityTags = pages.map((i, idx) => `
+    <a-entity id="slide-${i}" class="slides" ${idx > 0 ? 'visible="false"' : 'visible="true"'}>
+      <a-image src="#example-image-${i}"></a-image>
+      <a-image class="clickable left-arrow"  src="#img1"  position="-0.7 0 0" height="0.15" width="0.15"></a-image>
+      <a-image class="clickable right-arrow" src="#img2" position=" 0.7 0 0" height="0.15" width="0.15"></a-image>
+    </a-entity>`).join('\n');
+
+    return `
+      <a-scene id="example-target" mindar-image="imageTargetSrc: ${mindUrl}; uiScanning: yes; autoStart: false;" color-space="sRGB" renderer="colorManagement: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+        <a-camera position="0 0 0" look-controls="enabled: false" cursor="fuse: false; rayOrigin: mouse;" raycaster="near: 10; far: 10000; objects: .clickable"></a-camera>
+          <a-assets>
+            ${arrowTags}
+            ${assetTags}
+          </a-assets>
+        <a-entity id="slides-container" mindar-image-target="targetIndex: 0">
+          ${entityTags}
+        </a-entity>
+      </a-scene>`;
+    }
 }
 
 function generateMindARGLTFModel({ codetgt, modelFilename = "model.gltf", scale = "0.5 0.5 0.5", position = "0 0 0", rotation = "0 0 0" }) {

@@ -1,94 +1,115 @@
-const HyperbeamPromise = import("@hyperbeam/web")
-const json = import("./env.json")
+import Hyperbeam from "@hyperbeam/web";
 
-export function startIframe(){
+export function startIframe() {
+  let sessionId = null; // para cleanup ao sair
+
   AFRAME.registerComponent('hyperbeam', {
     async init() {
-      // Manipulate and set the mesh
-      const geometry = this.el.getObject3D('mesh').geometry
-      const {width, height} = geometry.parameters
-      // Need to offset for Three.js left-handed coordinate system
-      // https://stackoverflow.com/questions/1263072/changing-a-matrix-from-right-handed-to-left-handed-coordinate-system
-      // Apparently this isn't needed for Firefox, but it's need for Firefox if using Three.js directly without AFrame?
+      // -- Setup de mesh e textura --
+      const original = this.el.getObject3D('mesh');
+      const geometry = original.geometry.clone();
+      const { width, height } = geometry.parameters;
       if (!navigator.userAgent.includes("Firefox")) {
-        geometry.rotateZ(Math.PI)
-        geometry.rotateY(Math.PI)
+        geometry.rotateZ(Math.PI);
+        geometry.rotateY(Math.PI);
       }
-      const texture = new THREE.Texture()
-      const renderer = this.el.sceneEl.renderer
-      const material = new THREE.MeshBasicMaterial({ map: texture }) // Can we re-use the mesh's material?
-      material.side = THREE.DoubleSide
-      const plane = new THREE.Mesh(geometry, material)
-      this.el.setObject3D('mesh', plane)
+      const texture = new THREE.Texture();
+      const renderer = this.el.sceneEl.renderer;
+      const material = new THREE.MeshBasicMaterial({ map: texture });
+      material.side = THREE.DoubleSide;
+      const plane = new THREE.Mesh(geometry, material);
+      this.el.setObject3D('mesh', plane);
 
-      // Create a Hyperbeam computer
-      let embedURL = "" // Running locally and you have an embed URL? Set it here
-      const secretK = json["API_D"];
-      if (embedURL === "") {
-        const room = location.pathname.substring(1)
-        const req = await fetch(`https://demo-api.tutturu.workers.dev/${secretK}`)
-        if (req.status >= 400) {
-          alert("We are out of demo servers! Visit hyperbeam.dev to get your own API key")
-          return
-        }
-        const body = await req.json()
-        if (body.room !== room) {
-          history.replaceState(null, null, "/" + body.room + location.search)
-        }
-        embedURL = body.url
+      // -- Cria ou reutiliza sessão Hyperbeam via backend --
+      const moodleUrl = "https://www.dcc.ufrrj.br/moodle/login/index.php";
+      const response = await fetch("http://localhost:3000/api/hyperbeam/create-room", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ initial_url: moodleUrl })
+      });
+      console.log("Solicitando sessão Hyperbeam para:", moodleUrl);
+
+      if (response.status === 429) {
+        console.error("Limite de sessões Hyperbeam atingido. Tente novamente mais tarde.");
+        return;
+      }
+      if (!response.ok) {
+        const errorMsg = await response.text();
+        console.error("Falha ao criar/recuperar sessão Hyperbeam:", errorMsg);
+        return;
       }
 
-      // Render the Hyperbeam computer
-      const Hyperbeam = (await HyperbeamPromise).default
+      // Leitura única do body JSON
+      const data = await response.json();
+      const { sessionId: sid, embedURL, adminToken } = data;
+      if (!sid || !embedURL) {
+        console.error("Resposta inválida do servidor:", JSON.stringify(data));
+        return;
+      }
+      console.log("Usando sessão Hyperbeam:", sid, "→", embedURL);
+      sessionId = sid;
+
+      // // Cleanup ao sair da página
+      // window.addEventListener('unload', () => {
+      //   if (!sessionId) return;
+      //   navigator.sendBeacon(
+      //     "http://localhost:3000/api/hyperbeam/terminate-room",
+      //     JSON.stringify({ session_id: sessionId })
+      //   );
+      // });
+
+      // -- Renderiza o Hyperbeam usando import correto --
+      const hbcontainer = document.getElementById("hbcontainer");
       const hb = await Hyperbeam(hbcontainer, embedURL, {
-        frameCb: (frame) => {
+        frameCb: frame => {
           if (!texture.image) {
-            if (frame.constructor === HTMLVideoElement) {
-              // hack: three.js internal methods check for .width and .height
-              // need to set manually for video so that three.js handles it correctly
-              frame.width = frame.videoWidth
-              frame.height = frame.videoHeight
+            if (frame instanceof HTMLVideoElement) {
+              frame.width = frame.videoWidth;
+              frame.height = frame.videoHeight;
             }
-            texture.image = frame
-            texture.needsUpdate = true
+            texture.image = frame;
+            texture.needsUpdate = true;
           } else {
-            renderer.copyTextureToTexture(new THREE.Vector2(0, 0), new THREE.Texture(frame), texture)
+            renderer.copyTextureToTexture(
+              new THREE.Vector2(0, 0),
+              new THREE.Texture(frame),
+              texture
+            );
           }
         },
-        audioTrackCb: (track) => {
-          audio.srcObject = new MediaStream([track])
-          // This function never fire: it seems AFrame only supports static audio
-          this.el.addEventListener('sound-loaded', () => { 
-            this.el.components.sound.playSound()
-          })
+        audioTrackCb: track => {
+          let audioEl = document.getElementById("audio");
+          if (!audioEl) {
+            audioEl = document.createElement('audio');
+            audioEl.id = 'audio';
+            audioEl.autoplay = true;
+            document.body.appendChild(audioEl);
+          }
+          audioEl.srcObject = new MediaStream([track]);
+          this.el.addEventListener('sound-loaded', () => {
+            this.el.components.sound.playSound();
+          });
         }
-      })
+      });
 
-      // Handle mouse inputs
-      const handlePointer = (e) => {
-        const vector = new THREE.Vector3().copy(e.detail.intersection.point)
-        plane.worldToLocal(vector)
+      // -- Eventos de interação --
+      const handlePointer = e => {
+        const pt = e.detail.intersection.point.clone();
+        plane.worldToLocal(pt);
         hb.sendEvent({
           type: e.type,
-          x: vector.x / width + 0.5,
-          y: -vector.y / height + 0.5,
-          // AFrame v1.13.0 does not expose the original mouse event:
-          // https://github.com/aframevr/aframe/pull/5088
+          x: pt.x / width + 0.5,
+          y: -pt.y / height + 0.5,
           button: 0
-        })
-      }
-      // At the moment there's no "mousemove" event
-      // https://aframe.io/docs/1.3.0/components/cursor.html#events
-      this.el.addEventListener('mousedown', handlePointer)
-      this.el.addEventListener('mouseup', handlePointer)
-      window.addEventListener('wheel', (e) => {
+        });
+      };
+      this.el.addEventListener('mousedown', handlePointer);
+      this.el.addEventListener('mouseup', handlePointer);
+      window.addEventListener('wheel', e => {
         if (this.el.is('cursor-hovered')) {
-          hb.sendEvent({
-            type: 'wheel',
-            deltaY: e.deltaY,
-          })
+          hb.sendEvent({ type: 'wheel', deltaY: e.deltaY });
         }
-      })
+      });
     }
   });
 }

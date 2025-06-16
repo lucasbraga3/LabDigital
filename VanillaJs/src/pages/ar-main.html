@@ -1,143 +1,158 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-  <script src="../scripts/virtualcomp.mjs"></script>
-  <title>AR Main</title>
-  <style>
-    /* CSS */
-    .button-15 {
-      background-image: linear-gradient(#42A1EC, #0070C9);
-      border: 1px solid #0077CC;
-      border-radius: 4px;
-      box-sizing: border-box;
-      color: #FFFFFF;
-      cursor: pointer;
-      direction: ltr;
-      display: block;
-      font-family: "SF Pro Text","SF Pro Icons","AOS Icons","Helvetica Neue",Helvetica,Arial,sans-serif;
-      font-size: 17px;
-      font-weight: 400;
-      letter-spacing: -.022em;
-      line-height: 1.47059;
-      min-width: 30px;
-      overflow: visible;
-      padding: 4px 15px;
-      text-align: center;
-      user-select: none;
-      -webkit-user-select: none;
-      touch-action: manipulation;
-      white-space: nowrap;
-    }
-
-    .button-15:disabled {
-      cursor: default;
-      opacity: .3;
-    }
-
-    .button-15:hover {
-      background-image: linear-gradient(#51A9EE, #147BCD);
-      border-color: #1482D0;
-      text-decoration: none;
-    }
-
-    .button-15:active {
-      background-image: linear-gradient(#3D94D9, #0067B9);
-      border-color: #006DBC;
-      outline: none;
-    }
-
-    .button-15:focus {
-      box-shadow: rgba(131, 192, 253, 0.5) 0 0 0 3px;
-      outline: none;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <title>AR Experience Loader</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="../scripts/virtualcomp.mjs"></script>
+    <link rel="stylesheet" href="../styles/ar-main-style.css">
 </head>
 <body>
-  <div style="position: absolute; z-index: 1000; left: 24px; top: 16px;" class="inline-flex gap-x-1 origin-left scale-90">
-    <button id="example-start-button" class="button-15">Start</button>
-    <button id="example-pause-button" class="button-15">Pause</button>
-    <button id="example-pause-keep-video-button" class="button-15" >Pause (keep)</button>
-    <button id="example-unpause-button" class="button-15" >UnPause</button>
-    <button id="example-stop-button" class="button-15">Stop</button>
-  </div>
 
-  <div id="ar-container" style="flex:1;display:flex;justify-content:center;align-items:center;width:100%;height:100vh;">
-    <!-- Cenas AR serão carregadas aqui -->
-  </div>
+    <div id="entry-screen">
+        <h1>AR Experience</h1>
+        <p>Para iniciar a experiência de Realidade Aumentada, por favor, insira o código da cena abaixo.</p>
+        <form id="ar-code-form">
+            <input type="text" id="ar-code-input" placeholder="Digite o código aqui..." required>
+            <button type="submit" id="load-button">Carregar</button>
+        </form>
+    </div>
 
-  <script type="module">
-    import { initARControls } from "../scripts/ar-script.js";
-    import { startIframe } from  "../scripts/virtualcomp.mjs"
-    (async () => {
-      const container = document.getElementById("ar-container");
-      container.innerHTML = "";
-      let code = prompt("Digite o código da cena AR: ");
-      code = code ? code.trim() : "";
-      if (!code || code.length < 2) {
-        container.innerHTML = "<p style='color:red;text-align:center;'>Código inválido.</p>";
-        return;
-      }
+    <div id="loading-overlay" class="hidden">
+        <div class="spinner"></div>
+    </div>
 
-      // Primeiro tenta carregar slides, depois 3D
-      const urls = [
-        `http://localhost:3000/slides/${code}`,
-        `http://localhost:3000/model/${code}`
-      ];
+    <div id="error-container" class="hidden">
+        <div id="error-message">
+            <p>Não foi possível carregar a cena. Verifique o código e tente novamente.</p>
+            <button id="retry-button">Tentar Novamente</button>
+        </div>
+    </div>
 
-      let success = false;
-      for (const url of urls) {
-        try {
-          const res = await fetch(url);
-          if (res.ok) {
-            container.innerHTML = await res.text();
-            initARControls();
-            success = true;
-            break;
-          }
-        } catch (err) {
-          console.warn(`Erro ao tentar carregar ${url}:`, err);
-        }
-      }
+    <div id="ar-container"></div>
 
-      if (!success) {
-        const full = code.split('--')
-        const frame = full[1];
-        const codehere = full[0];
-        if(frame == 'iframe'){
-          container.innerHTML = `
-          <audio id="audio" autoplay></audio>
-          <a-scene mindar-image="imageTargetSrc: http://localhost:3000/targets/${codehere}" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-            <a-camera position="0 0 0" look-controls="enabled: false" cursor="fuse: false; rayOrigin: mouse;" raycaster="near: 10; far: 10000;"></a-camera>
-            <a-entity camera="active: true" position="0 1.6 0">
-            <a-entity
-                cursor="fuse: false; rayOrigin: mouse"
-                raycaster="objects: .hyperbeam; far: 20"
-                >
-            </a-entity>
-            <a-entity mindar-image-target="targetIndex: 0">
-              <a-plane
-                class="hyperbeam"
-                position="0 0 0"
-                rotation="0 0 0"
-                width="2.2"
-                height="1"
-                color="#000000"
-                sound="src: #audio; autoplay: true; refDistance: 0.2; rolloffFactor: 3"
-                hyperbeam
-                ></a-plane>      
-            </a-entity>
-          </a-scene>
-          <div id="hbcontainer"></div>`
-          startIframe();
-          initARControls();
-        }
-        else{
-          container.innerHTML = "<p style='color:red;text-align:center;'>Falha ao carregar cena AR, verifique seu código.</p>";
-        }
-      }
-    })();
-  </script>
+    <div id="ar-controls" class="hidden">
+        <button id="example-start-button" class="control-button" title="Iniciar"><i data-feather="play"></i></button>
+        <button id="example-pause-button" class="control-button" title="Pausar"><i data-feather="pause"></i></button>
+        <button id="example-pause-keep-video-button" class="control-button" title="Pausar (manter vídeo)"><i data-feather="disc"></i></button>
+        <button id="example-unpause-button" class="control-button" title="Continuar"><i data-feather="play-circle"></i></button>
+        <button id="example-stop-button" class="control-button" title="Parar"><i data-feather="stop-circle"></i></button>
+    </div>
+
+    <script type="module">
+        // Importa os scripts originais (ajuste o caminho se necessário)
+        import { initARControls } from "../scripts/ar-script.js";
+        import { startIframe } from "../scripts/virtualcomp.mjs";
+
+        // Inicializa os ícones Feather
+        feather.replace();
+
+        // --- Referências aos Elementos do DOM ---
+        const entryScreen = document.getElementById('entry-screen');
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const errorContainer = document.getElementById('error-container');
+        const arContainer = document.getElementById('ar-container');
+        const arControls = document.getElementById('ar-controls');
+        const arCodeForm = document.getElementById('ar-code-form');
+        const arCodeInput = document.getElementById('ar-code-input');
+        const retryButton = document.getElementById('retry-button');
+
+        // --- Funções de Controle da UI ---
+        const showUI = {
+            entry: () => {
+                entryScreen.classList.remove('hidden');
+                loadingOverlay.classList.add('hidden');
+                errorContainer.classList.add('hidden');
+                arControls.classList.add('hidden');
+                // Não esconder o arContainer, ele já está por baixo
+            },
+            loading: () => {
+                entryScreen.classList.add('hidden');
+                errorContainer.classList.add('hidden');
+                loadingOverlay.classList.remove('hidden');
+            },
+            arScene: () => {
+                loadingOverlay.classList.add('hidden');
+                entryScreen.classList.add('hidden'); // Garante que a tela de entrada suma
+                arControls.classList.remove('hidden');
+            },
+            error: (message) => {
+                loadingOverlay.classList.add('hidden');
+                errorContainer.classList.remove('hidden');
+                errorContainer.querySelector('p').textContent = message;
+            }
+        };
+
+        // --- Lógica Principal de Carregamento da Cena ---
+        const loadARScene = async (code) => {
+            if (!code || code.length < 2) {
+                showUI.error("Código inválido. Por favor, insira um código válido.");
+                return;
+            }
+            showUI.loading();
+            arContainer.innerHTML = "";
+
+            const urls = [
+                `http://localhost:3000/slides/${code}`,
+                `http://localhost:3000/model/${code}`
+            ];
+            let success = false;
+
+            for (const url of urls) {
+                try {
+                    const res = await fetch(url);
+                    if (res.ok) {
+                        arContainer.innerHTML = await res.text();
+                        initARControls();
+                        success = true;
+                        break;
+                    }
+                } catch (err) {
+                    console.warn(`Erro ao tentar carregar ${url}:`, err);
+                }
+            }
+
+            if (!success) {
+                const parts = code.split('--');
+                const codehere = parts?.[0];
+                const frameType = parts?.[1];
+                if (frameType === 'iframe' && codehere) {
+                    arContainer.innerHTML = `
+                        <audio id="audio" autoplay></audio>
+                        <a-scene mindar-image="imageTargetSrc: http://localhost:3000/targets/${codehere}" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+                            <a-camera position="0 0 0" look-controls="enabled: false" cursor="fuse: false; rayOrigin: mouse;" raycaster="near: 10; far: 10000;"></a-camera>
+                            <a-entity mindar-image-target="targetIndex: 0">
+                                <a-plane class="hyperbeam" position="0 0 0" rotation="0 0 0" width="2.2" height="1" color="#000000" sound="src: #audio; autoplay: true; refDistance: 0.2; rolloffFactor: 3" hyperbeam></a-plane>
+                            </a-entity>
+                        </a-scene>
+                        <div id="hbcontainer"></div>`;
+                    startIframe();
+                    initARControls();
+                    success = true;
+                }
+            }
+
+            if (success) {
+                showUI.arScene();
+            } else {
+                showUI.error("Falha ao carregar a cena AR. Verifique seu código ou a conexão com o servidor.");
+            }
+        };
+
+        // --- Event Listeners ---
+        arCodeForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const code = arCodeInput.value.trim();
+            loadARScene(code);
+        });
+        retryButton.addEventListener('click', () => {
+            showUI.entry();
+            arCodeInput.value = "";
+        });
+    </script>
 </body>
 </html>

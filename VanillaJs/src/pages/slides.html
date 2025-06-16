@@ -1,312 +1,259 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <title>Enviar Slides ou Modelos 3D</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="../index.css" />
-  <link rel="stylesheet" href="../dropbox.css" />
-  <style>
-    body { background: #f7fafc; }
-    .button-89.active, .button-89:focus-visible {
-      background-color: #1e40af !important;
-      color: #fff !important;
-      border-color: #1e3a8a !important;
-      outline: 2px solid #1e40af;
-      outline-offset: 2px;
-    }
-    .file-list { margin-top: 12px; }
-    .file-list li { font-size: 14px; color: #444; margin-bottom: 2px; word-break: break-all;}
-    .progress-bar-bg {
-      width: 100%; background: #e5e7eb; border-radius: 8px; height: 16px; margin-top: 12px;
-    }
-    .progress-bar-fg {
-      height: 100%; background: #2563eb; border-radius: 8px; width: 0%; transition: width .3s;
-    }
-    .msg-err { color: #dc2626; font-size: 15px; margin-top: 10px; }
-    .msg-success { color: #16a34a; font-size: 15px; margin-top: 10px; }
-    @media (max-width: 600px) {
-      .container { padding: 0 10px; }
-      .w-48 { width: 90vw; min-width: 120px; }
-      .dropzone { min-height: 90px !important; }
-      h2 { font-size: 1.2rem; }
-      .button-89 { font-size: 13px; padding: 5px 12px; }
-    }
-    input:focus { outline: 2px solid #1e40af; }
-  </style>
-  <script src="../scripts/dropbox-dist.js"></script>
+    <meta charset="UTF-8" />
+    <title>Enviar Conteúdo para RA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    
+    <script src="../scripts/dropbox-dist.js"></script>
+    
+    <link rel="stylesheet" href="../dropbox.css" />
+    <link rel="stylesheet" href="../styles/slides-style.css" />
+    
 </head>
 <body>
-  <header class="bg-blue-600 text-white shadow-lg">
-    <nav class="container mx-auto px-6 py-4 flex flex-col md:flex-row md:justify-between items-center">
-      <a href="/" class="text-xl font-bold">Gerenciador de Slides</a>
-      <a href="https://github.com/lucasbraga3/LabDigital" class="hover:text-blue-200 transition-colors mt-2 md:mt-0">Código fonte do projeto</a>
-    </nav>
-  </header>
-
-  <main class="container mx-auto px-6 py-8" style="max-width:600px;">
-    <h2 class="text-2xl font-bold mb-4">Enviar conteúdo RA</h2>
-    <p class="mb-4 text-gray-600">
-      Escolha o modo de envio, insira um código (mínimo 2 caracteres) e selecione seus arquivos.
-    </p>
-
-    <div class="mb-4 flex gap-2">
-      <button id="btnSlides" type="button" class="button-89 active" tabindex="0">Slides</button>
-      <button id="btnModel" type="button" class="button-89" tabindex="0">Modelo 3D</button>
-    </div>
-
-    <div class="mb-4">
-      <strong>Instruções:</strong>
-      <ul id="instructions" class="list-disc list-inside text-gray-700 ml-5">
-        <li>Envie apenas um arquivo <strong>.pdf</strong>, <strong>.png</strong> ou <strong>.pptx</strong></li>
-        <li>O sistema converterá automaticamente em imagens para RA</li>
-      </ul>
-    </div>
-
-    <label for="codetgt" class="block mb-2">Código:</label>
-    <input type="text" id="codetgt" maxlength="32" class="border p-2 rounded mb-4 w-48" placeholder="Ex: abc123" autocomplete="off" />
-
-    <form class="dropzone" id="slideDropzone" style="min-height:100px;">
-      <div class="dz-message">Clique ou solte arquivos aqui</div>
-    </form>
-
-    <ul id="fileList" class="file-list"></ul>
-
-    <div class="progress-bar-bg" style="display:none">
-      <div class="progress-bar-fg" id="progressBar"></div>
-    </div>
-    <button id="uploadButton" class="button-89 mt-4">Enviar</button>
-    <div id="msg" class="mt-2" role="alert"></div>
-  </main>
-
-  <footer class="bg-gray-100 mt-12 py-8 border-t">
-    <div class="container mx-auto px-6">
-      <div class="md:grid md:grid-cols-2 md:gap-15">
-        <div class="mb-8 md:mb-0">
-          <h3 class="text-lg font-semibold mb-4">Sobre o Sistema</h3>
-          <p class="text-gray-600">Plataforma de envio e conversão para realidade aumentada de slides ou modelos 3D.</p>
+    <header>
+        <div class="container">
+            <a href="/" class="text-xl font-bold">Gerenciador de Conteúdo RA</a>
         </div>
-        <div>
-          <h3 class="text-lg font-semibold mb-4">Instituição</h3>
-          <p class="text-gray-600">
-            Universidade Federal Rural do Rio de Janeiro<br>
-            Instituto Multidisciplinar
-          </p>
-        </div>
-      </div>
-      <div class="mt-8 pt-8 border-t text-center text-gray-600">
-        <p>Laboratório Digital de Realidade Aumentada</p>
-      </div>
-    </div>
-  </footer>
+    </header>
 
-  <script>
+    <main class="container">
+        <div class="upload-card">
+            <h2>Enviar Conteúdo</h2>
+            <p>Selecione o tipo, insira um código e envie os arquivos para a plataforma.</p>
+
+            <div class="mode-switcher">
+                <button id="btnSlides" type="button" class="active">Slides</button>
+                <button id="btnModel" type="button">Modelo 3D</button>
+            </div>
+
+            <div class="form-group">
+                <label for="codetgt">Código de Identificação</label>
+                <input type="text" id="codetgt" maxlength="32" placeholder="Ex: turmaxyz_aula10" autocomplete="off" />
+            </div>
+
+            <div class="form-group">
+                <label>Instruções</label>
+                <ul id="instructions">
+                    <li>Envie apenas um arquivo <strong>.pdf</strong>, <strong>.png</strong> ou <strong>.pptx</strong></li>
+                    <li>O sistema converterá automaticamente em imagens para RA</li>
+                </ul>
+            </div>
+
+            <form class="dropzone" id="slideDropzone"></form>
+            
+            <div id="file-preview-list" class="file-preview-container"></div>
+            
+            <div id="msg" role="alert"></div>
+            <div class="progress-bar-bg" style="display:none">
+                <div class="progress-bar-fg" id="progressBar"></div>
+            </div>
+            <button id="uploadButton" class="upload-button">Enviar Arquivos</button>
+        </div>
+    </main>
+
+    <footer class="text-center">
+        <div class="container">
+            <p>Laboratório Digital de Realidade Aumentada</p>
+            <p style="font-size: 0.8rem; margin-top: 0.5rem;">Universidade Federal Rural do Rio de Janeiro - Instituto Multidisciplinar</p>
+        </div>
+    </footer>
+
+    <script>
+    feather.replace();
+
     Dropzone.autoDiscover = false;
     let currentMode = "slides";
     const codetgtInput = document.getElementById("codetgt");
     const instructions = document.getElementById("instructions");
-    const fileList = document.getElementById("fileList");
     const msgDiv = document.getElementById("msg");
     const progressBg = document.querySelector('.progress-bar-bg');
     const progressBar = document.getElementById("progressBar");
+    const filePreviewList = document.getElementById("file-preview-list");
 
-    // Função para atualizar visualmente os arquivos na lista
-    function updateFileList() {
-      fileList.innerHTML = "";
-      for (const file of slideDropzone.files) {
-        const li = document.createElement("li");
-        li.textContent = file.name + " (" + Math.round(file.size / 1024) + " KB)";
-        fileList.appendChild(li);
-      }
+    function updateCustomFileList() {
+        filePreviewList.innerHTML = '';
+        if (slideDropzone.files.length === 0) {
+            filePreviewList.style.display = 'none';
+            return;
+        }
+        
+        filePreviewList.style.display = 'flex';
+        slideDropzone.files.forEach(file => {
+            const fileSize = file.size > 1024 * 1024 
+                ? `${(file.size / (1024 * 1024)).toFixed(2)} MB`
+                : `${Math.round(file.size / 1024)} KB`;
+
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-preview-item';
+            fileItem.innerHTML = `
+                <div class="file-icon"><i data-feather="file"></i></div>
+                <div class="file-details">
+                    <div class="file-name">${file.name}</div>
+                    <div class="file-size">${fileSize}</div>
+                </div>
+                <button type="button" class="remove-file-btn" title="Remover arquivo">
+                    <i data-feather="x"></i>
+                </button>
+            `;
+            
+            fileItem.querySelector('.remove-file-btn').addEventListener('click', () => {
+                slideDropzone.removeFile(file);
+            });
+
+            filePreviewList.appendChild(fileItem);
+        });
+        feather.replace();
     }
 
-    // Recria Dropzone ao alternar o modo para garantir regras corretas
+    // FUNÇÃO RESTAURADA
+    function displayMessage(text, type) {
+        let icon = type === 'success' ? 'check-circle' : 'alert-triangle';
+        
+        msgDiv.innerHTML = `
+            <div class="alert alert-${type}">
+                <i data-feather="${icon}"></i>
+                <span>${text}</span>
+            </div>`;
+        feather.replace();
+    }
+
     let slideDropzone = null;
     function initDropzone(options) {
-      if (slideDropzone) {
-        slideDropzone.destroy();
-      }
-      slideDropzone = new Dropzone("#slideDropzone", options);
-    }
-    function getDropzoneOptions(mode) {
-      if (mode === "model") {
-        return {
-          url: "/dummy-url-model", // <<< ADICIONE ISTO!
-          autoProcessQueue: false,
-          uploadMultiple: true,
-          parallelUploads: 10,
-          acceptedFiles: ".gltf,.glb,.bin,.png,.jpg,.jpeg",
-          addRemoveLinks: true,
-          clickable: true,
-          init: function () {
-            this.on("addedfile", updateFileList);
-            this.on("removedfile", updateFileList);
-          }
-        }
-      } else {
-        return {
-          url: "/dummy-url-slides", // <<< ADICIONE ISTO!
-          autoProcessQueue: false,
-          uploadMultiple: false,
-          parallelUploads: 1,
-          acceptedFiles: ".pdf,.pptx,.png,.jpg,.jpeg",
-          addRemoveLinks: true,
-          clickable: true,
-          init: function () {
-            this.on("addedfile", updateFileList);
-            this.on("removedfile", updateFileList);
-          }
-        }
-      }
+        if (slideDropzone) slideDropzone.destroy();
+        slideDropzone = new Dropzone("#slideDropzone", options);
+        slideDropzone.on("addedfile", updateCustomFileList);
+        slideDropzone.on("removedfile", updateCustomFileList);
     }
 
-    // Inicializa modo padrão
+    function getDropzoneOptions(mode) {
+        const commonOptions = {
+            autoProcessQueue: false,
+            clickable: true,
+            previewsContainer: false,
+            previewTemplate: '<div style="display:none;"></div>', 
+            dictDefaultMessage: `<i data-feather="upload-cloud" style="width:48px; height:48px; stroke-width:1.5;"></i><br>Clique ou arraste os arquivos aqui`,
+        };
+        if (mode === "model") {
+            return { ...commonOptions, url: "/dummy", uploadMultiple: true, acceptedFiles: ".gltf,.glb,.bin,.png,.jpg,.jpeg" };
+        } else {
+            return { ...commonOptions, url: "/dummy", uploadMultiple: false, acceptedFiles: ".pdf,.pptx,.png,.jpg,.jpeg" };
+        }
+    }
+    
+    // FUNÇÃO RESTAURADA
+    function setActiveButton(activeId) {
+        document.getElementById("btnSlides").classList.remove("active");
+        document.getElementById("btnModel").classList.remove("active");
+        document.getElementById(activeId).classList.add("active");
+    }
+    
+    // --- Lógica de Inicialização e Eventos ---
     initDropzone(getDropzoneOptions("slides"));
+    updateCustomFileList();
 
     document.getElementById("btnSlides").addEventListener("click", () => {
-      currentMode = "slides";
-      initDropzone(getDropzoneOptions("slides"));
-      instructions.innerHTML = `
-        <li>Envie apenas um arquivo <strong>.pdf</strong>, <strong>.png</strong> ou <strong>.pptx</strong></li>
-        <li>O sistema converterá automaticamente em imagens para RA</li>`;
-      setActiveButton("btnSlides");
-      msgDiv.textContent = "";
-      fileList.innerHTML = "";
+        currentMode = "slides";
+        initDropzone(getDropzoneOptions("slides"));
+        instructions.innerHTML = `
+            <li>Envie apenas um arquivo <strong>.pdf</strong>, <strong>.png</strong> ou <strong>.pptx</strong></li>
+            <li>O sistema converterá automaticamente em imagens para RA</li>`;
+        setActiveButton("btnSlides");
+        msgDiv.innerHTML = "";
+        updateCustomFileList();
     });
 
     document.getElementById("btnModel").addEventListener("click", () => {
-      currentMode = "model";
-      initDropzone(getDropzoneOptions("model"));
-      instructions.innerHTML = `
-        <li>Inclua o arquivo <strong>.gltf</strong> ou <strong>.glb</strong></li>
-        <li>Inclua também os arquivos auxiliares como <strong>.bin</strong>, <strong>.png</strong>, <strong>.jpg</strong></li>
-        <li>Todos os arquivos devem ser enviados juntos</li>`;
-      setActiveButton("btnModel");
-      msgDiv.textContent = "";
-      fileList.innerHTML = "";
+        currentMode = "model";
+        initDropzone(getDropzoneOptions("model"));
+        instructions.innerHTML = `
+            <li>Inclua o arquivo <strong>.gltf</strong> ou <strong>.glb</strong></li>
+            <li>Inclua também os arquivos auxiliares como <strong>.bin</strong> e texturas</li>
+            <li>Todos os arquivos devem ser enviados juntos</li>`;
+        setActiveButton("btnModel");
+        msgDiv.innerHTML = "";
+        updateCustomFileList();
     });
+    
+    document.getElementById("uploadButton").addEventListener("click", () => {
+        msgDiv.innerHTML = "";
+        progressBar.style.width = "0%";
+        progressBg.style.display = "none";
 
-    function setActiveButton(activeId) {
-      document.getElementById("btnSlides").classList.remove("active");
-      document.getElementById("btnModel").classList.remove("active");
-      document.getElementById(activeId).classList.add("active");
-    }
-
-    document.getElementById("uploadButton").addEventListener("click", async () => {
-      msgDiv.textContent = "";
-      msgDiv.className = "";
-      progressBar.style.width = "0%";
-      progressBg.style.display = "none";
-
-      const codetgt = codetgtInput.value.trim();
-      if (codetgt.length < 2) {
-        msgDiv.textContent = "Por favor, insira um código com pelo menos 2 caracteres.";
-        msgDiv.className = "msg-err";
-        return;
-      }
-
-      if (slideDropzone.files.length === 0) {
-        msgDiv.textContent = "Adicione ao menos um arquivo para enviar.";
-        msgDiv.className = "msg-err";
-        return;
-      }
-
-      // Validação
-      if (currentMode === "slides") {
-        if (slideDropzone.files.length !== 1) {
-          msgDiv.textContent = "Envie apenas UM arquivo no modo Slides.";
-          msgDiv.className = "msg-err";
-          return;
+        const codetgt = codetgtInput.value.trim();
+        if (codetgt.length < 2) {
+            displayMessage("Por favor, insira um código com pelo menos 2 caracteres.", "error");
+            return;
         }
-        const ext = slideDropzone.files[0].name.split(".").pop().toLowerCase();
-        if (!["pdf", "pptx", "png", "jpg", "jpeg"].includes(ext)) {
-          msgDiv.textContent = "Arquivo inválido. Use .pdf, .pptx, .png, .jpg ou .jpeg.";
-          msgDiv.className = "msg-err";
-          return;
+        if (slideDropzone.files.length === 0) {
+            displayMessage("Adicione ao menos um arquivo para enviar.", "error");
+            return;
         }
-      }
-      if (currentMode === "model") {
-        const hasModel = slideDropzone.files.some(f =>
-          ["gltf", "glb"].includes(f.name.split(".").pop().toLowerCase())
-        );
-        if (!hasModel) {
-          msgDiv.textContent = "Inclua pelo menos um arquivo .gltf ou .glb no envio.";
-          msgDiv.className = "msg-err";
-          return;
+
+        if (currentMode === "slides" && slideDropzone.files.length !== 1) {
+            displayMessage("Envie apenas UM arquivo no modo Slides.", "error");
+            return;
         }
-      }
-
-      // Prepara FormData
-      const formData = new FormData();
-      formData.append("codetgt", codetgt);
-
-      if (currentMode === "model") {
-        for (const file of slideDropzone.files) {
-          formData.append("files", file);
+        if (currentMode === "model") {
+            const hasModel = slideDropzone.files.some(f => ["gltf", "glb"].includes(f.name.split(".").pop().toLowerCase()));
+            if (!hasModel) {
+                displayMessage("Inclua pelo menos um arquivo .gltf ou .glb no envio.", "error");
+                return;
+            }
         }
-      } else {
-        formData.append("slides", slideDropzone.files[0]);
-      }
 
-      const endpoint = currentMode === "model"
-        ? "http://localhost:3000/upload/model"
-        : "http://localhost:3000/upload/slides";
+        const formData = new FormData();
+        formData.append("codetgt", codetgt);
 
-      // Barra de progresso
-      progressBg.style.display = "block";
-      progressBar.style.width = "5%";
+        if (currentMode === "model") {
+            slideDropzone.files.forEach(file => formData.append("files", file));
+        } else {
+            formData.append("slides", slideDropzone.files[0]);
+        }
 
-      try {
+        const endpoint = currentMode === "model" ? "http://localhost:3000/upload/model" : "http://localhost:3000/upload/slides";
+        
+        progressBg.style.display = "block";
+        
         const xhr = new XMLHttpRequest();
         xhr.open("POST", endpoint, true);
 
-        xhr.upload.onprogress = function (evt) {
-          if (evt.lengthComputable) {
-            const percent = Math.round((evt.loaded / evt.total) * 100);
-            progressBar.style.width = percent + "%";
-          }
+        xhr.upload.onprogress = (evt) => {
+            if (evt.lengthComputable) {
+                const percent = Math.round((evt.loaded / evt.total) * 100);
+                progressBar.style.width = percent + "%";
+            }
         };
 
         xhr.onload = function () {
-          progressBg.style.display = "none";
-          slideDropzone.removeAllFiles();
-
-          if (xhr.status === 200) {
-            msgDiv.textContent = "Arquivo enviado com sucesso!";
-            msgDiv.className = "msg-success";
-          } else {
-            let message = "Erro ao enviar arquivo.";
-            try {
-              const res = JSON.parse(xhr.responseText);
-              if (res && res.message) message = res.message;
-            } catch {}
-            msgDiv.textContent = message;
-            msgDiv.className = "msg-err";
-          }
+            progressBg.style.display = "none";
+            if (xhr.status >= 200 && xhr.status < 300) {
+                displayMessage("Conteúdo enviado com sucesso!", "success");
+                slideDropzone.removeAllFiles();
+            } else {
+                let message = "Erro ao enviar arquivo.";
+                try {
+                    const res = JSON.parse(xhr.responseText);
+                    if (res && res.message) message = res.message;
+                } catch {}
+                displayMessage(message, "error");
+            }
         };
 
         xhr.onerror = function () {
-          progressBg.style.display = "none";
-          msgDiv.textContent = "Falha ao enviar os arquivos.";
-          msgDiv.className = "msg-err";
+            progressBg.style.display = "none";
+            displayMessage("Falha de rede ao tentar enviar os arquivos.", "error");
         };
 
         xhr.send(formData);
-
-      } catch (err) {
-        progressBg.style.display = "none";
-        msgDiv.textContent = "Falha ao enviar os arquivos.";
-        msgDiv.className = "msg-err";
-      }
     });
 
-    // Acessibilidade: permitir tab nos botões e foco visual
-    document.getElementById("btnSlides").addEventListener("keyup", e => {
-      if (e.key === "Enter" || e.key === " ") document.getElementById("btnSlides").click();
-    });
-    document.getElementById("btnModel").addEventListener("keyup", e => {
-      if (e.key === "Enter" || e.key === " ") document.getElementById("btnModel").click();
-    });
-  </script>
+</script>
 </body>
 </html>
