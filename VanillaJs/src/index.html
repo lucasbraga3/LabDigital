@@ -59,8 +59,17 @@
         </div>
     </footer>
 
-    <script>
+    <script type="module">
         feather.replace();
+
+        // Importa o DotEnv para carregar o IP do servidor usando o VITE, se não estiver definido, usa 'localhost'
+        const SERVER_IP     = import.meta.env.VITE_SERVER_IP    || 'localhost';
+        const SERVER_PORT   = import.meta.env.VITE_SERVER_PORT  || '3000';
+        const USE_HTTPS     = import.meta.env.VITE_USE_HTTPS === 'true' || false;
+        
+        console.log('VITE_SERVER_IP →', import.meta.env.VITE_SERVER_IP);
+        console.log(Object.keys(import.meta.env));
+        console.log(`Conectando ao servidor AR em: ${SERVER_IP}`);
     </script>
 </body>
 </html>

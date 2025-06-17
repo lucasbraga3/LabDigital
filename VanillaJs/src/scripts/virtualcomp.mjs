@@ -3,6 +3,12 @@ import Hyperbeam from "@hyperbeam/web";
 export function startIframe() {
   let sessionId = null; // para cleanup ao sair
 
+  // Importa o DotEnv para carregar o IP do servidor usando o VITE, se não estiver definido, usa 'localhost'
+  const SERVER_IP   = import.meta.env.VITE_SERVER_IP   || 'localhost';
+  const SERVER_PORT = import.meta.env.VITE_SERVER_PORT || '3000';
+
+  console.log(`Conectando ao servidor AR em: ${SERVER_IP}`);
+
   AFRAME.registerComponent('hyperbeam', {
     async init() {
       // -- Setup de mesh e textura --
@@ -22,7 +28,7 @@ export function startIframe() {
 
       // -- Cria ou reutiliza sessão Hyperbeam via backend --
       const moodleUrl = "https://www.dcc.ufrrj.br/moodle/login/index.php";
-      const response = await fetch("http://localhost:3000/api/hyperbeam/create-room", {
+      const response = await fetch(`/api/hyperbeam/create-room`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ initial_url: moodleUrl })

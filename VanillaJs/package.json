@@ -4,7 +4,7 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -18,13 +18,14 @@
   "author": "Lucas Braga",
   "license": "MIT",
   "dependencies": {
+    "@hyperbeam/web": "^0.0.22",
     "@tailwindcss/vite": "^4.1.6",
     "aframe": "^1.7.0",
     "axios": "^1.8.4",
+    "dotenv": "^16.5.0",
     "mind-ar": "^1.2.5",
     "tailwindcss": "^4.1.6",
-    "vite-plugin-mkcert": "^1.17.8",
-    "@hyperbeam/web": "^0.0.22"
+    "vite-plugin-mkcert": "^1.17.8"
   },
   "devDependencies": {
     "vite": "^6.2.1"

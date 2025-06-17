@@ -1,210 +1,244 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8" />
-    <title>Compilador de Alvo .MIND</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/feather-icons"></script>
-    
-    <script src="../scripts/dropbox-dist.js"></script>
-    <script type="module" src="../scripts/compilescript.js"></script>
-    
-    <link rel="stylesheet" href="../dropbox.css" />
-    <link rel="stylesheet" href="../styles/compiler-style.css" />
-</head>
-<body>
-    <header>
-        <div class="container">
-            <a href="/" class="text-xl font-bold">Compilador de Alvo RA</a>
-        </div>
-    </header>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Compilador de Alvo .MIND</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <main class="container">
-        <div class="compiler-card">
-            <h2>Gerar Alvo .MIND</h2>
-            <p>Transforme uma imagem (.png ou .jpg) em um arquivo de alvo <code>.mind</code> para ser usado em experiências com MindAR.</p>
-            
-            <div class="form-group" style="margin-top:1.5rem;">
-                <label>Instruções</label>
-                <ul>
-                    <li>Insira um código único para o alvo (mínimo 2 caracteres).</li>
-                    <li>Adicione uma imagem com boas features, contraste e sem bordas.</li>
-                </ul>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
+            rel="stylesheet"
+        />
+        <script src="https://unpkg.com/feather-icons"></script>
+
+        <script src="../scripts/dropbox-dist.js"></script>
+        <script type="module" src="../scripts/compilescript.js"></script>
+
+        <link rel="stylesheet" href="../dropbox.css" />
+        <link rel="stylesheet" href="../styles/compiler-style.css" />
+    </head>
+    <body>
+        <header>
+            <div class="container">
+                <a href="/" class="text-xl font-bold">Compilador de Alvo RA</a>
             </div>
+        </header>
 
-            <div class="form-group">
-                <label for="codetgt">Código do Alvo</label>
-                <input type="text" id="codetgt" maxlength="32" placeholder="Ex: alvo_poster_evento" autocomplete="off" />
-            </div>
+        <main class="container">
+            <div class="compiler-card">
+                <h2>Gerar Alvo .MIND</h2>
+                <p>
+                    Transforme uma imagem (.png ou .jpg) em um arquivo de alvo
+                    <code>.mind</code> para ser usado em experiências com MindAR.
+                </p>
 
-            <form class="dropzone" id="compilerDropzone"></form>
-            
-            <div id="image-preview-container" class="image-preview-container"></div>
-            
-            <div id="output-container">
-                <div id="progress-container" class="progress-container">
-                    <span id="progress-text"></span>
-                    <div class="progress-bar-bg">
-                        <div class="progress-bar-fg" id="progressBar"></div>
-                    </div>
+                <div class="form-group" style="margin-top: 1.5rem">
+                    <label>Instruções</label>
+                    <ul>
+                        <li>
+                            Insira um código único para o alvo (mínimo 2 caracteres).
+                        </li>
+                        <li>
+                            Adicione uma imagem com boas features, contraste e sem bordas.
+                        </li>
+                    </ul>
                 </div>
-                <div id="msg" role="alert"></div>
-                <details id="results-container" class="results-container">
-                    <summary>Visualizar Resultados da Compilação</summary>
-                    <div id="results-grid" class="results-grid"></div>
-                </details>
+
+                <div class="form-group">
+                    <label for="codetgt">Código do Alvo</label>
+                    <input
+                        type="text"
+                        id="codetgt"
+                        maxlength="32"
+                        placeholder="Ex: alvo_poster_evento"
+                        autocomplete="off"
+                    />
+                </div>
+
+                <form class="dropzone" id="compilerDropzone"></form>
+
+                <div
+                    id="image-preview-container"
+                    class="image-preview-container"
+                ></div>
+
+                <div id="output-container">
+                    <div id="progress-container" class="progress-container">
+                        <span id="progress-text"></span>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fg" id="progressBar"></div>
+                        </div>
+                    </div>
+                    <div id="msg" role="alert"></div>
+                    <details id="results-container" class="results-container">
+                        <summary>Visualizar Resultados da Compilação</summary>
+                        <div id="results-grid" class="results-grid"></div>
+                    </details>
+                </div>
+
+                <button id="startButton" class="generate-button">
+                    Compilar e Enviar
+                </button>
             </div>
-            
-            <button id="startButton" class="generate-button">Compilar e Enviar</button>
-        </div>
-    </main>
+        </main>
 
-    <footer class="text-center">
-        <p>Laboratório Digital de Realidade Aumentada</p>
-        <p style="font-size: 0.8rem; margin-top: 0.5rem;">Universidade Federal Rural do Rio de Janeiro - Instituto Multidisciplinar</p>
-    </footer>
+        <footer class="text-center">
+            <p>Laboratório Digital de Realidade Aumentada</p>
+            <p style="font-size: 0.8rem; margin-top: 0.5rem">
+                Universidade Federal Rural do Rio de Janeiro - Instituto Multidisciplinar
+            </p>
+        </footer>
 
-    <script>
-      // Desativa a descoberta automática da Dropzone globalmente ANTES que a DOM esteja pronta.
-      // Isso previne os erros "No URL provided" e "Dropzone already attached".
-      Dropzone.autoDiscover = false;
+        <script type="module">
+            // Desativa a descoberta automática da Dropzone globalmente ANTES que a DOM esteja pronta.
+            // Isso previne os erros "No URL provided" e "Dropzone already attached".
+            Dropzone.autoDiscover = false;
 
-      document.addEventListener('DOMContentLoaded', function() {
-          feather.replace();
+            document.addEventListener('DOMContentLoaded', function () {
+                feather.replace();
 
-          // Referências aos elementos do DOM
-          const startButton = document.getElementById("startButton");
-          const codetgtInput = document.getElementById("codetgt");
-          const msgDiv = document.getElementById("msg");
-          const previewContainer = document.getElementById("image-preview-container");
-          const progressContainer = document.getElementById("progress-container");
-          const progressText = document.getElementById("progress-text");
-          const progressBar = document.getElementById("progressBar");
-          const resultsContainer = document.getElementById("results-container");
-          const resultsGrid = document.getElementById("results-grid");
+                // Referências aos elementos do DOM
+                const startButton = document.getElementById('startButton');
+                const codetgtInput = document.getElementById('codetgt');
+                const msgDiv = document.getElementById('msg');
+                const previewContainer = document.getElementById(
+                    'image-preview-container'
+                );
+                const progressContainer = document.getElementById('progress-container');
+                const progressText = document.getElementById('progress-text');
+                const progressBar = document.getElementById('progressBar');
+                const resultsContainer = document.getElementById('results-container');
+                const resultsGrid = document.getElementById('results-grid');
 
-          // Limpa todos os outputs para um novo envio
-          function clearOutputs() {
-              msgDiv.innerHTML = '';
-              resultsGrid.innerHTML = '';
-              progressContainer.style.display = 'none';
-              resultsContainer.style.display = 'none';
-              startButton.disabled = false;
-          }
+                // Limpa todos os outputs para um novo envio
+                function clearOutputs() {
+                    msgDiv.innerHTML = '';
+                    resultsGrid.innerHTML = '';
+                    progressContainer.style.display = 'none';
+                    resultsContainer.style.display = 'none';
+                    startButton.disabled = false;
+                }
 
-          // --- API GLOBAL PARA O compilescript.js ---
+                // --- API GLOBAL PARA O compilescript.js ---
 
-          window.updateCompilerProgress = (percent, text) => {
-              progressContainer.style.display = 'block';
-              progressBar.style.width = `${percent}%`;
-              progressText.textContent = text;
-          };
+                window.updateCompilerProgress = (percent, text) => {
+                    progressContainer.style.display = 'block';
+                    progressBar.style.width = `${percent}%`;
+                    progressText.textContent = text;
+                };
 
-          window.displayCompilerResults = (results) => {
-              progressContainer.style.display = 'none';
-              resultsContainer.style.display = 'block';
-              resultsContainer.open = true;
-              resultsGrid.innerHTML = '';
+                window.displayCompilerResults = (results) => {
+                    progressContainer.style.display = 'none';
+                    resultsContainer.style.display = 'block';
+                    resultsContainer.open = true;
+                    resultsGrid.innerHTML = '';
 
-              results.forEach(result => {
-                  const item = document.createElement('div');
-                  item.className = 'result-image-item';
-                  item.innerHTML = `
-                      <img src="${result.src}" alt="${result.name}">
-                      <span>${result.name}</span>
-                  `;
-                  resultsGrid.appendChild(item);
-              });
-              
-              msgDiv.innerHTML = `
-                  <div class="alert alert-success">
-                      <i data-feather="check-circle"></i>
-                      <span>Alvo compilado e enviado com sucesso!</span>
-                  </div>`;
-              feather.replace();
-              startButton.disabled = false;
-          };
+                    results.forEach((result) => {
+                        const item = document.createElement('div');
+                        item.className = 'result-image-item';
+                        item.innerHTML = `
+                                <img src="${result.src}" alt="${result.name}">
+                                <span>${result.name}</span>
+                            `;
+                        resultsGrid.appendChild(item);
+                    });
 
-          window.displayCompilerError = (error) => {
-              progressContainer.style.display = 'none';
-              let userMessage = "Ocorreu um erro desconhecido.";
-              let techDetails = error.stack || error.message;
+                    msgDiv.innerHTML = `
+                            <div class="alert alert-success">
+                                    <i data-feather="check-circle"></i>
+                                    <span>Alvo compilado e enviado com sucesso!</span>
+                            </div>`;
+                    feather.replace();
+                    startButton.disabled = false;
+                };
 
-              if (error && error.isAxiosError && error.response) {
-                  const status = error.response.status;
-                  if (status === 409) {
-                      userMessage = "Erro: Já existe um alvo com este código no servidor.";
-                  } else {
-                      userMessage = `Erro no servidor (Código: ${status}). Verifique o console.`;
-                  }
-                  techDetails = `Message: ${error.message}\nResponse Data: ${JSON.stringify(error.response.data, null, 2)}`;
-              } else if (error instanceof Error) {
-                  userMessage = error.message;
-              }
+                window.displayCompilerError = (error) => {
+                    progressContainer.style.display = 'none';
+                    let userMessage = 'Ocorreu um erro desconhecido.';
+                    let techDetails = error.stack || error.message;
 
-              msgDiv.innerHTML = `
-                  <div class="alert alert-error">
-                      <i data-feather="alert-triangle"></i>
-                      <span style="flex-grow:1;">${userMessage}</span>
-                      <div class="details-toggle" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
-                          Detalhes
-                      </div>
-                      <pre class="technical-details" style="display:none;">${techDetails}</pre>
-                  </div>`;
-              feather.replace();
-              startButton.disabled = false;
-          };
-          
-          // Inicialização manual e segura do Dropzone
-          const dropzone = new Dropzone("#compilerDropzone", {
-              url: "#",
-              autoProcessQueue: false,
-              maxFiles: 1,
-              acceptedFiles: ".png,.jpg,.jpeg",
-              addRemoveLinks: false,
-              clickable: true,
-              dictDefaultMessage: `<i data-feather="image" style="width:48px; height:48px; stroke-width:1.5;"></i><br>Clique ou arraste uma imagem aqui`,
-              init: function () {
-                  this.on("addedfile", (file) => {
-                      if (this.files.length > 1) this.removeFile(this.files[0]);
-                      const reader = new FileReader();
-                      reader.onload = (e) => {
-                          previewContainer.style.display = 'block';
-                          previewContainer.innerHTML = `<div class="image-preview-box"><img src="${e.target.result}" alt="Pré-visualização"><div class="file-name">${file.name}</div></div>`;
-                      };
-                      reader.readAsDataURL(file);
-                  });
-                  this.on("removedfile", () => {
-                      previewContainer.innerHTML = '';
-                      previewContainer.style.display = 'none';
-                  });
-              }
-          });
+                    if (error && error.isAxiosError && error.response) {
+                        const status = error.response.status;
+                        if (status === 409) {
+                            userMessage =
+                                'Erro: Já existe um alvo com este código no servidor.';
+                        } else {
+                            userMessage = `Erro no servidor (Código: ${status}). Verifique o console.`;
+                        }
+                        techDetails = `Message: ${error.message}\nResponse Data: ${JSON.stringify(
+                            error.response.data,
+                            null,
+                            2
+                        )}`;
+                    } else if (error instanceof Error) {
+                        userMessage = error.message;
+                    }
 
-          // Listener do botão principal
-          startButton.addEventListener("click", () => {
-              clearOutputs();
-              const codetgt = codetgtInput.value.trim();
-              
-              if (codetgt.length < 2) {
-                  window.displayCompilerError(new Error("Por favor, insira um código com pelo menos 2 caracteres."));
-                  return;
-              }
-              if (dropzone.files.length === 0) {
-                  window.displayCompilerError(new Error("Adicione uma imagem para compilar."));
-                  return;
-              }
-              
-              startButton.disabled = true;
-              window.updateCompilerProgress(0, 'Iniciando...');
-              
-              window.compileFiles(dropzone.files, codetgt);
-          });
-      });
-  </script>
-</body>
+                    msgDiv.innerHTML = `
+                            <div class="alert alert-error">
+                                    <i data-feather="alert-triangle"></i>
+                                    <span style="flex-grow:1;">${userMessage}</span>
+                                    <div class="details-toggle" onclick="this.nextElementSibling.style.display = this.nextElementSibling.style.display === 'none' ? 'block' : 'none'">
+                                            Detalhes
+                                    </div>
+                                    <pre class="technical-details" style="display:none;">${techDetails}</pre>
+                            </div>`;
+                    feather.replace();
+                    startButton.disabled = false;
+                };
+
+                // Inicialização manual e segura do Dropzone
+                const dropzone = new Dropzone('#compilerDropzone', {
+                    url: '#',
+                    autoProcessQueue: false,
+                    maxFiles: 1,
+                    acceptedFiles: '.png,.jpg,.jpeg',
+                    addRemoveLinks: false,
+                    clickable: true,
+                    dictDefaultMessage: `<i data-feather="image" style="width:48px; height:48px; stroke-width:1.5;"></i><br>Clique ou arraste uma imagem aqui`,
+                    init: function () {
+                        this.on('addedfile', (file) => {
+                            if (this.files.length > 1) this.removeFile(this.files[0]);
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                previewContainer.style.display = 'block';
+                                previewContainer.innerHTML = `<div class="image-preview-box"><img src="${e.target.result}" alt="Pré-visualização"><div class="file-name">${file.name}</div></div>`;
+                            };
+                            reader.readAsDataURL(file);
+                        });
+                        this.on('removedfile', () => {
+                            previewContainer.innerHTML = '';
+                            previewContainer.style.display = 'none';
+                        });
+                    },
+                });
+
+                // Listener do botão principal
+                startButton.addEventListener('click', () => {
+                    clearOutputs();
+                    const codetgt = codetgtInput.value.trim();
+
+                    if (codetgt.length < 2) {
+                        window.displayCompilerError(
+                            new Error('Por favor, insira um código com pelo menos 2 caracteres.')
+                        );
+                        return;
+                    }
+                    if (dropzone.files.length === 0) {
+                        window.displayCompilerError(
+                            new Error('Adicione uma imagem para compilar.')
+                        );
+                        return;
+                    }
+
+                    startButton.disabled = true;
+                    window.updateCompilerProgress(0, 'Iniciando...');
+
+                    window.compileFiles(dropzone.files, codetgt);
+                });
+            });
+        </script>
+    </body>
 </html>

@@ -1,17 +1,28 @@
 // server.js - Versão final para Slides e Modelos 3D com Redis, HTTPS e Upload robusto
 
-require('dotenv').config(); 
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
 const multer = require('multer');
 const { fromPath } = require('pdf2pic');
 const { createClient } = require('redis');
-//const https = require('https');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.SERVER_PORT || 3000;
+
+// Caminhos dos arquivos de certificado e chave (configure no seu .env)
+const SSL_KEY_PATH = process.env.SSL_KEY_PATH || './localhost+2-key.pem';
+const SSL_CERT_PATH = process.env.SSL_CERT_PATH || './localhost+2.pem';
+
+// Carrega certificados
+const sslOptions = {
+  key: fs.readFileSync(path.resolve(__dirname, SSL_KEY_PATH)),
+  cert: fs.readFileSync(path.resolve(__dirname, SSL_CERT_PATH)),
+};
+
 
 // Middleware de CORS e JSON
 app.use(cors());
@@ -179,7 +190,7 @@ app.get('/', (req, res) => {
 });
 
 // Upload de TARGET (.mind para AR)
-app.post('/upload/target', upload.single('targets'), async (req, res) => {
+app.post('/api/upload/target', upload.single('targets'), async (req, res) => {
   let codetgt = req.body.codetgt || Math.floor(Math.random() * 1000000) + 1;
   const key = `mind:${codetgt}`;
   const exists = await redis.exists(key);
@@ -194,7 +205,7 @@ app.post('/upload/target', upload.single('targets'), async (req, res) => {
 });
 
 // Recupera o .mind da base Redis
-app.get('/targets/:codetgt', async (req, res) => {
+app.get('/api/targets/:codetgt', async (req, res) => {
   const { codetgt } = req.params;
   try {
     const base64 = await redis.get(`mind:${codetgt}`);
@@ -209,7 +220,7 @@ app.get('/targets/:codetgt', async (req, res) => {
 });
 
 // Upload de slides (.pdf, .pptx, .png, .jpg, .jpeg)
-app.post('/upload/slides', uploadSlides.single('slides'), async (req, res) => {
+app.post('/api/upload/slides', uploadSlides.single('slides'), async (req, res) => {
   try {
     let codetgt = req.body.codetgt;
     if (Array.isArray(codetgt)) codetgt = codetgt[0];
@@ -271,7 +282,7 @@ app.post('/upload/slides', uploadSlides.single('slides'), async (req, res) => {
 });
 
 // Servir HTML dos slides do Redis
-app.get('/slides/:codetgt', async (req, res) => {
+app.get('/api/slides/:codetgt', async (req, res) => {
   const { codetgt } = req.params;
   try {
     const html = await redis.get(`slides:${codetgt}`);
@@ -285,7 +296,7 @@ app.get('/slides/:codetgt', async (req, res) => {
 });
 
 // Servir imagens individuais de slides
-app.get('/img/:codetgt/:page', async (req, res) => {
+app.get('/api/img/:codetgt/:page', async (req, res) => {
   const key = `img:${req.params.codetgt}:${req.params.page}`;
   try {
     const base64 = await redis.get(key);
@@ -300,7 +311,7 @@ app.get('/img/:codetgt/:page', async (req, res) => {
 });
 
 // Upload de modelos 3D (GLTF/GLB, BIN, PNG, etc) e salva também no Redis
-app.post('/upload/model', uploadAssetsDisk.array('files'), async (req, res) => {
+app.post('/api/upload/model', uploadAssetsDisk.array('files'), async (req, res) => {
   try {
     let codetgt = req.body.codetgt;
     if (Array.isArray(codetgt)) codetgt = codetgt[0];
@@ -347,7 +358,7 @@ app.post('/upload/model', uploadAssetsDisk.array('files'), async (req, res) => {
 
 
 // Servir HTML para modelo 3D do Redis
-app.get('/model/:codetgt', async (req, res) => {
+app.get('/api/model/:codetgt', async (req, res) => {
   const { codetgt } = req.params;
   try {
     const htmlBase64 = await redis.get(`model:${codetgt}`);
@@ -360,7 +371,7 @@ app.get('/model/:codetgt', async (req, res) => {
   }
 });
 
-app.get('/models/:codetgt/:filename', async (req, res) => {
+app.get('/api/models/:codetgt/:filename', async (req, res) => {
   const { codetgt, filename } = req.params;
   try {
     const base64 = await redis.get(`modelasset:${codetgt}:${filename}`);
@@ -376,6 +387,18 @@ app.get('/models/:codetgt/:filename', async (req, res) => {
   } catch (err) {
     res.status(500).send('Erro ao buscar arquivo no Redis');
   }
+});
+
+// Rota para servir imagens de setas (setas para navegação nos slides)
+app.get('/api/arrow/:filename', (req, res) => {
+  const { filename } = req.params;
+  const filePath = path.join(__dirname, 'public', filename
+);
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).send('Arrow image not found');
+  }
+  res.set('Content-Type', 'image/png');
+  res.send(fs.readFileSync(filePath));
 });
 
 // Middleware global de erro para uploads
@@ -394,14 +417,14 @@ app.use((err, req, res, next) => {
 
 // Funções utilitárias para gerar HTML AR
 function generateMindARSlidesHtml({ codetgt, pages, pagesCount }) {
-  const mindUrl = `http://localhost:${PORT}/targets/${codetgt}`;
+  const mindUrl = `/api/targets/${codetgt}`;
   const arrowTags = [
-    `<img id="img1" src="http://localhost:${PORT}/left-arrow.png" crossorigin="anonymous" />`,
-    `<img id="img2" src="http://localhost:${PORT}/right-arrow.png" crossorigin="anonymous" />`
+    `<img id="img1" src="/api/arrow/left-arrow.png" crossorigin="anonymous" />`,
+    `<img id="img2" src="/api/arrow/right-arrow.png" crossorigin="anonymous" />`
   ].join('\n    ');
 
   const assetTags = pages
-    .map(i => `<img id="example-image-${i}" src="http://localhost:${PORT}/img/${codetgt}/${i}" crossorigin="anonymous" />`)
+    .map(i => `<img id="example-image-${i}" src="/api/img/${codetgt}/${i}" crossorigin="anonymous" />`)
     .join('\n    ');
 
     if (pagesCount === 0) {
@@ -452,8 +475,8 @@ function generateMindARSlidesHtml({ codetgt, pages, pagesCount }) {
 }
 
 function generateMindARGLTFModel({ codetgt, modelFilename = "model.gltf", scale = "0.5 0.5 0.5", position = "0 0 0", rotation = "0 0 0" }) {
-  const mindUrl = `http://localhost:${PORT}/targets/${codetgt}`;
-  const modelUrl = `http://localhost:${PORT}/models/${codetgt}/${modelFilename}`;
+  const mindUrl = `/api/targets/${codetgt}`;
+  const modelUrl = `/api/models/${codetgt}/${modelFilename}`;
 
   return `
     <a-scene
@@ -487,6 +510,20 @@ function generateMindARGLTFModel({ codetgt, modelFilename = "model.gltf", scale 
   `;
 }
 
-app.listen(PORT, () => {
-  console.log(`🚀 HTTP server rodando na porta ${PORT}`);
+// Middleware global de erro para uploads
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    console.error('MULTER ERROR:', err);
+    return res.status(400).send(`MulterError: ${err.message}`);
+  }
+  if (err) {
+    console.error('UNEXPECTED ERROR:', err);
+    return res.status(500).send('Erro interno no servidor.');
+  }
+  next();
+});
+
+// Cria o servidor HTTPS em vez do HTTP padrão
+https.createServer(sslOptions, app).listen(PORT, () => {
+  console.log(`🔒 HTTPS server rodando em https://localhost:${PORT}`);
 });

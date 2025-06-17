@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/feather-icons"></script>
-    <script src="../scripts/virtualcomp.mjs"></script>
+    <script src="../scripts/virtualcomp.mjs" type="module"></script>
     <link rel="stylesheet" href="../styles/ar-main-style.css">
 </head>
 <body>
@@ -47,7 +47,7 @@
         // Importa os scripts originais (ajuste o caminho se necessário)
         import { initARControls } from "../scripts/ar-script.js";
         import { startIframe } from "../scripts/virtualcomp.mjs";
-
+        
         // Inicializa os ícones Feather
         feather.replace();
 
@@ -97,9 +97,10 @@
             arContainer.innerHTML = "";
 
             const urls = [
-                `http://localhost:3000/slides/${code}`,
-                `http://localhost:3000/model/${code}`
+                `/api/slides/${code}`,
+                `/api/model/${code}`
             ];
+            
             let success = false;
 
             for (const url of urls) {
@@ -123,7 +124,7 @@
                 if (frameType === 'iframe' && codehere) {
                     arContainer.innerHTML = `
                         <audio id="audio" autoplay></audio>
-                        <a-scene mindar-image="imageTargetSrc: http://localhost:3000/targets/${codehere}" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+                        <a-scene mindar-image="imageTargetSrc: /api/targets/${codehere}" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
                             <a-camera position="0 0 0" look-controls="enabled: false" cursor="fuse: false; rayOrigin: mouse;" raycaster="near: 10; far: 10000;"></a-camera>
                             <a-entity mindar-image-target="targetIndex: 0">
                                 <a-plane class="hyperbeam" position="0 0 0" rotation="0 0 0" width="2.2" height="1" color="#000000" sound="src: #audio; autoplay: true; refDistance: 0.2; rolloffFactor: 3" hyperbeam></a-plane>

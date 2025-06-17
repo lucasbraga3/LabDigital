@@ -2,6 +2,13 @@ import "aframe";
 import "mind-ar/dist/mindar-image-aframe.prod.js";
 import axios from 'axios';
 
+// Importa o DotEnv para carregar o IP do servidor usando o VITE, se não estiver definido, usa 'localhost'
+const SERVER_IP = import.meta.env.VITE_SERVER_IP || 'localhost';
+const SERVER_PORT = import.meta.env.VITE_SERVER_PORT || '3000';
+const USE_HTTPS = import.meta.env.VITE_USE_HTTPS === 'true' || false;
+
+console.log(`Conectando ao servidor AR em: ${SERVER_IP}`);
+
 // Instancia o compilador do MindAR, que será usado pela função principal
 const compiler = new MINDAR.IMAGE.Compiler();
 
@@ -60,9 +67,10 @@ const compileFiles = async (files, codetgt = null) => {
     formData.append("targets", blob, `${codetgt}.mind`);
     formData.append("codetgt", codetgt);
 
-    await axios.post("http://localhost:3000/upload/target", formData, {
+    await axios.post('/api/upload/target', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
-    });
+    })
+
     
     // ETAPA FINAL: Sucesso!
     window.updateCompilerProgress(100, 'Finalizado!');
