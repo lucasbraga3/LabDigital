@@ -2,80 +2,97 @@ import "aframe";
 import "mind-ar/dist/mindar-image-aframe.prod.js";
 import axios from 'axios';
 
-Dropzone.autoDiscover = false;
+// Importa o DotEnv para carregar o IP do servidor usando o VITE, se não estiver definido, usa 'localhost'
+const SERVER_IP = import.meta.env.VITE_SERVER_IP || 'localhost';
+const SERVER_PORT = import.meta.env.VITE_SERVER_PORT || '3000';
+const USE_HTTPS = import.meta.env.VITE_USE_HTTPS === 'true' || false;
 
-// Instancia o compilador do MindAR
+console.log(`Conectando ao servidor AR em: ${SERVER_IP}`);
+
+// Instancia o compilador do MindAR, que será usado pela função principal
 const compiler = new MINDAR.IMAGE.Compiler();
 
-// Função para download do .mind (opcional)
-const download = (buffer) => {
-  const blob = new Blob([buffer]);
-  const aLink = window.document.createElement('a');
-  aLink.download = 'targets.mind';
-  aLink.href = window.URL.createObjectURL(blob);
-  aLink.click();
-  window.URL.revokeObjectURL(aLink.href);
+// Função auxiliar para carregar um arquivo de imagem
+const loadImage = async (file) => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
 };
 
-// Envia o arquivo .mind para o servidor via /upload/target
-const send = async (buffer, codetgt = null) => {
-  const msgDiv = document.getElementById("msg");
+// Função principal que orquestra todo o processo de compilação e upload
+const compileFiles = async (files, codetgt = null) => {
   try {
-    const blob = new Blob([buffer]);
-    const formData = new FormData();
-    formData.append("targets", blob, codetgt ? `${codetgt}.mind` : "targets.mind");
-    if (codetgt) formData.append("codetgt", codetgt);
+    // ETAPA 1: Carregar a imagem
+    window.updateCompilerProgress(10, 'Carregando imagem na memória...');
+    const image = await loadImage(files[0]);
 
-    const response = await axios.post("https://localhost:3000/upload/target", formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
+    // ETAPA 2: Compilar os alvos com feedback de progresso
+    // O progresso da compilação (0-100) será mapeado para a faixa de 20% a 70% da barra total
+    const dataList = await compiler.compileImageTargets([image], (progress) => {
+      window.updateCompilerProgress(20 + progress * 0.5, 'Analisando e compilando features...');
     });
 
-    if (response.status === 200) {
-      const fileName = response.data.fileName;
-      msgDiv.textContent = 'Arquivo salvo: ' + fileName;
-      msgDiv.className = "msg-success";
-      // download(buffer); // Descomente para baixar local após upload
-    } else if (response.status === 400) {
-      msgDiv.textContent = 'Arquivo já existe. Escolha outro código.';
-      msgDiv.className = "msg-err";
-    }
+    // ETAPA 3: Gerar as imagens de resultado (em memória)
+    window.updateCompilerProgress(75, 'Gerando pré-visualização dos resultados...');
+    const results = [];
+    dataList.forEach(data => {
+      // Gera a imagem de tracking
+      const trackingImage = data.trackingImageList[0];
+      const trackingPoints = data.trackingData[0].points.map(p => ({ x: Math.round(p.x), y: Math.round(p.y) }));
+      results.push({
+        src: generateResultImage(trackingImage, trackingPoints),
+        name: 'Tracking Points'
+      });
+
+      // Gera a imagem de matching
+      const matchingImage = data.imageList[0];
+      const matchingPoints = [...data.matchingData[0].maximaPoints, ...data.matchingData[0].minimaPoints].map(p => ({ x: Math.round(p.x), y: Math.round(p.y) }));
+      results.push({
+        src: generateResultImage(matchingImage, matchingPoints),
+        name: 'Matching Points'
+      });
+    });
+
+    // ETAPA 4: Exportar o buffer final do arquivo .mind
+    window.updateCompilerProgress(85, 'Exportando arquivo .mind...');
+    const exportedBuffer = await compiler.exportData();
+
+    // ETAPA 5: Enviar o arquivo .mind para o servidor
+    window.updateCompilerProgress(90, 'Enviando para o servidor...');
+    const blob = new Blob([exportedBuffer]);
+    const formData = new FormData();
+    formData.append("targets", blob, `${codetgt}.mind`);
+    formData.append("codetgt", codetgt);
+
+    await axios.post('/api/upload/target', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+
+    
+    // ETAPA FINAL: Sucesso!
+    window.updateCompilerProgress(100, 'Finalizado!');
+    window.displayCompilerResults(results);
+
   } catch (err) {
-    msgDiv.textContent = "Erro ao enviar arquivo .mind";
-    msgDiv.className = "msg-err";
-    console.error("Erro ao enviar:", err);
+    // Em caso de qualquer erro no processo, chama a função de erro da UI
+    console.error('Erro na compilação:', err);
+    window.displayCompilerError(err);
   }
 };
 
-// Mostra visualização dos pontos/targets
-const showData = (data) => {
-  for (let i = 0; i < data.trackingImageList.length; i++) {
-    const image = data.trackingImageList[i];
-    const points = data.trackingData[i].points.map((p) => ({ x: Math.round(p.x), y: Math.round(p.y) }));
-    showImage(image, points);
-  }
-  for (let i = 0; i < data.imageList.length; i++) {
-    const image = data.imageList[i];
-    const kpmPoints = [...data.matchingData[i].maximaPoints, ...data.matchingData[i].minimaPoints];
-    const points2 = [];
-    for (let j = 0; j < kpmPoints.length; j++) {
-      points2.push({ x: Math.round(kpmPoints[j].x), y: Math.round(kpmPoints[j].y) });
-    }
-    showImage(image, points2);
-  }
-};
-
-const showImage = (targetImage, points) => {
-  const container = document.getElementById("container");
-  if (!container) return;
+// Função interna para desenhar os pontos na imagem e retornar um DataURL
+const generateResultImage = (targetImage, points) => {
   const canvas = document.createElement('canvas');
-  container.appendChild(canvas);
-  canvas.width  = targetImage.width;
+  canvas.width = targetImage.width;
   canvas.height = targetImage.height;
-  canvas.style.width = canvas.width;
   const ctx = canvas.getContext('2d');
+  
+  // Desenha a imagem base em tons de cinza
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = new Uint32Array(imageData.data.buffer);
-
   const alpha = (0xff << 24);
   for (let c = 0; c < targetImage.width; c++) {
     for (let r = 0; r < targetImage.height; r++) {
@@ -83,114 +100,21 @@ const showImage = (targetImage, points) => {
       data[r * canvas.width + c] = alpha | (pix << 16) | (pix << 8) | pix;
     }
   }
-  var pix = (0xff << 24) | (0x00 << 16) | (0xff << 8) | 0x00; // verde
+  
+  // Desenha os pontos de feature em verde
+  const pointColor = (0xff << 24) | (0x00 << 16) | (0xff << 8) | 0x00; // Verde
   for (let i = 0; i < points.length; ++i) {
     const x = points[i].x;
     const y = points[i].y;
-    const offset = (x + y * canvas.width);
-    data[offset] = pix;
-    for (var size = 1; size <= 6; size++) {
-      data[offset - size] = pix;
-      data[offset + size] = pix;
-      data[offset - size * canvas.width] = pix;
-      data[offset + size * canvas.width] = pix;
+    if (x >= 0 && x < canvas.width && y >= 0 && y < canvas.height) {
+      const offset = (x + y * canvas.width);
+      data[offset] = pointColor;
     }
   }
   ctx.putImageData(imageData, 0, 0);
+  
+  return canvas.toDataURL(); // Retorna a imagem como string base64
 };
 
-const loadImage = async (file) => {
-  return new Promise((resolve, reject) => {
-    let img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = URL.createObjectURL(file);
-  });
-};
-
-const compileFiles = async (files, codetgt = null) => {
-  const progressEl = document.getElementById("progress");
-  const msgDiv = document.getElementById("msg");
-  if (progressEl) progressEl.innerText = "";
-  if (msgDiv) msgDiv.textContent = "";
-
-  try {
-    // Limpa container visual
-    const container = document.getElementById("container");
-    if (container) container.innerHTML = "";
-
-    // 1) Carrega imagens
-    const images = [];
-    for (const file of files) {
-      images.push(await loadImage(file));
-    }
-
-    // 2) Compila com progresso
-    const dataList = await compiler.compileImageTargets(images, progress => {
-      if (progressEl) progressEl.innerText = `Progresso: ${progress.toFixed(2)}%`;
-    });
-    if (progressEl) progressEl.innerText = "";
-
-    // 3) Mostra debug das imagens
-    dataList.forEach(showData);
-
-    // 4) Exporta buffer .mind
-    const exportedBuffer = await compiler.exportData();
-
-    // 5) Envia para o servidor, passando codetgt
-    await send(exportedBuffer, codetgt);
-
-  } catch (err) {
-    if (msgDiv) {
-      msgDiv.textContent = 'Erro ao compilar imagens.';
-      msgDiv.className = "msg-err";
-    }
-    console.error('Erro na compilação:', err);
-  }
-};
-
-// Disponibiliza para o HTML
+// Disponibiliza a função principal para ser chamada pelo HTML
 window.compileFiles = compileFiles;
-
-// Suporte para abrir arquivo .mind (visualização)
-const loadMindFile = async (file) => {
-  var reader = new FileReader();
-  reader.onload = function() {
-    const dataList = compiler.importData(this.result);
-    for (let i = 0; i < dataList.length; i++) {
-      showData(dataList[i]);
-    }
-  };
-  reader.readAsArrayBuffer(file);
-};
-
-// Instancia apenas UM Dropzone, protegido por DOMContentLoaded
-document.addEventListener('DOMContentLoaded', function() {
-  // Instancia Dropzone sempre explicitamente aqui, sem if
-  const dropzone = new Dropzone("#dropzone", {
-    url: "#",
-    autoProcessQueue: false,
-    maxFiles: 1,
-    acceptedFiles: ".png,.jpg,.jpeg",
-    addRemoveLinks: true,
-    clickable: true
-  });
-
-  document.getElementById("startButton").addEventListener("click", function() {
-    const codetgt = document.getElementById("codetgt").value.trim();
-    if (dropzone.files.length === 0) {
-      const msgDiv = document.getElementById("msg");
-      if (msgDiv) {
-        msgDiv.textContent = "Adicione uma imagem para converter.";
-        msgDiv.className = "msg-err";
-      }
-      return;
-    }
-    const ext = dropzone.files[0].name.split('.').pop().toLowerCase();
-    if (ext === 'mind') {
-      loadMindFile(dropzone.files[0]);
-    } else {
-      compileFiles(dropzone.files, codetgt);
-    }
-  });
-});

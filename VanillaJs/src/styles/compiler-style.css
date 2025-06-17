@@ -1,0 +1,320 @@
+/* Estilos para compiler.html */
+
+:root {
+    --primary-color: #007bff;
+    --background-color: #121212;
+    --surface-color: #1e1e1e;
+    --surface-hover: #2a2a2a;
+    --text-color: #e0e0e0;
+    --text-muted: #888;
+    --error-color: #cf6679;
+    --success-color: #66bb6a;
+    --border-color: #333;
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+main {
+    flex-grow: 1;
+}
+
+header {
+    background-color: var(--surface-color);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1.5rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header a {
+    color: var(--text-color);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+header a:hover {
+    color: var(--primary-color);
+}
+
+footer {
+    background-color: var(--surface-color);
+    border-top: 1px solid var(--border-color);
+    padding: 2rem 1rem;
+    margin-top: 4rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.compiler-card {
+    background-color: var(--surface-color);
+    border-radius: 12px;
+    padding: 2rem;
+    margin-top: 2rem;
+}
+
+h2 {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+p, ul {
+    color: var(--text-muted);
+    line-height: 1.6;
+}
+
+ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+ul li {
+    padding-left: 1.5rem;
+    position: relative;
+    margin-bottom: 0.5rem;
+}
+
+ul li::before {
+    content: '›';
+    position: absolute;
+    left: 0;
+    color: var(--primary-color);
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.form-group input[type="text"] {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-color);
+    font-size: 1rem;
+    box-sizing: border-box;
+}
+
+.form-group input[type="text"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.dropzone {
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+    background-color: var(--background-color);
+    transition: border-color 0.3s, background-color 0.3s;
+}
+
+.dropzone .dz-message {
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.dropzone.dz-drag-hover {
+    border-color: var(--primary-color);
+    background-color: var(--surface-hover);
+}
+
+.image-preview-container {
+    margin-top: 1.5rem;
+    display: none;
+    text-align: center;
+}
+
+.image-preview-box {
+    background-color: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    display: inline-block;
+}
+
+.image-preview-box img {
+    max-width: 100%;
+    max-height: 200px;
+    border-radius: 4px;
+}
+
+.image-preview-box .file-name {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+    word-break: break-all;
+}
+
+.progress-container {
+    margin-top: 1.5rem;
+    display: none;
+}
+
+#progress-text {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.progress-bar-bg {
+    width: 100%;
+    background: var(--background-color);
+    border-radius: 8px;
+    height: 1rem;
+    overflow: hidden;
+}
+
+.progress-bar-fg {
+    height: 100%;
+    background: var(--primary-color);
+    border-radius: 8px;
+    width: 0%;
+    transition: width .4s ease;
+}
+
+.results-container {
+    margin-top: 1.5rem;
+    display: none;
+}
+
+.results-container summary {
+    cursor: pointer;
+    padding: 0.75rem 1rem;
+    background-color: var(--surface-hover);
+    border-radius: 8px;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    list-style: none; /* Remove o marcador padrão */
+}
+.results-container summary::-webkit-details-marker {
+    display: none; /* Remove o marcador no Chrome */
+}
+
+.results-container summary::after {
+    content: 'Mostrar';
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.results-container[open] summary::after {
+    content: 'Ocultar';
+}
+
+.results-grid {
+    margin-top: 1rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 1rem;
+}
+
+.result-image-item {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.result-image-item img {
+    width: 100%;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+}
+
+.generate-button {
+    width: 100%;
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--primary-color);
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s, opacity 0.3s;
+    margin-top: 1.5rem;
+}
+.generate-button:hover {
+    background-color: #0056b3;
+}
+.generate-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.alert {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    margin-top: 1rem;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    font-weight: 600;
+}
+
+.alert-error {
+    background-color: rgba(207, 102, 121, 0.1);
+    border-color: var(--error-color);
+    color: var(--error-color);
+}
+
+.alert-success {
+    background-color: rgba(102, 187, 106, 0.1);
+    border-color: var(--success-color);
+    color: var(--success-color);
+}
+
+.alert-info {
+    background-color: rgba(0, 123, 255, 0.1);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.details-toggle {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    text-decoration: underline;
+    cursor: pointer;
+    margin-left: auto;
+    padding-left: 1rem;
+}
+
+.technical-details {
+    background-color: var(--background-color);
+    border: 1px solid var(--border-color);
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.8rem;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 150px;
+    overflow-y: auto;
+}

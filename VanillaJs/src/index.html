@@ -1,78 +1,75 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
-  <link rel="stylesheet" href="./index.css" />
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Lab Digital de RA</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Lab Digital de RA</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <link rel="stylesheet" href="./styles/index-style.css">
+
 </head>
-<body class="flex flex-col min-h-screen">
-  <!-- Header -->
-  <header class="bg-blue-600 text-white shadow-lg">
-    <nav class="container mx-auto px-6 py-4">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center">
-          <a href="/" class="text-xl font-bold">Lab Digital de RA</a>
+<body>
+    <header>
+        <div class="container header-content">
+            <a href="/" class="text-xl">Lab Digital de RA</a>
+            <a href="https://github.com/lucasbraga3/LabDigital" target="_blank" rel="noopener noreferrer">Código Fonte</a>
         </div>
-        <div class="hidden md:flex items-center space-x-8">
-          <a href="https://github.com/lucasbraga3/LabDigital" class="hover:text-blue-200 transition-colors">Código fonte do projeto</a>
-        </div>
-      </div>
-    </nav>
-  </header>
+    </header>
 
-  <!-- Main Content -->
-  <main class="flex-grow">
-    <div class="flex flex-col items-center justify-center py-16 bg-gray-100">
-      <h1 class="font-serif font-extrabold text-3xl mb-8 text-center px-4">
-        Bem-vindo ao Lab Digital de Realidade Aumentada!
-      </h1>
-      <div class="space-y-6">
-        <a href="./pages/compiler.html" class="block">
-          <button class="button-89 w-64 w-full max-w-xs">Upload de Alvo</button>
-        </a>
-        <a href="./pages/slides.html" class="block">
-          <button class="button-89 w-64 w-full max-w-xs">Upload Slides</button>
-        </a>	
-        <a href="./pages/ar-main.html" class="block">
-          <button class="button-89 w-64 w-full max-w-xs">Experiência AR</button>
-        </a>
-      </div>
-    </div>
-  </main>
+    <main class="container">
+        <section class="hero-section">
+            <h1>Laboratório Digital de Realidade Aumentada</h1>
+            <p class="subtitle">
+                Uma plataforma completa para criar, gerenciar e visualizar experiências de RA. Faça upload de alvos, conteúdos e mergulhe em um ambiente interativo.
+            </p>
+        </section>
 
-  <!-- Footer -->
-  <footer class="bg-gray-100 border-t mt-12">
-    <div class="container mx-auto px-6 py-8">
-      <div class="md:grid md:grid-cols-2 md:gap-15">
-        <div class="mb-8 md:mb-0">
-          <h3 class="text-lg font-semibold mb-4">Sobre o Lab</h3>
-          <p class="text-gray-600">
-            Plataforma integrada para desenvolvimento e experiência em realidade aumentada 
-            com suporte a múltiplos formatos de mídia.
-          </p>
+        <div class="action-grid">
+            <a href="./pages/compiler.html" class="action-card">
+                <div class="card-icon"><i data-feather="target" style="width:40px; height:40px; stroke-width: 1.5;"></i></div>
+                <h3>Compilar Alvo</h3>
+                <p>Faça o upload de uma imagem (JPG, PNG) para que ela seja processada e transformada em um "alvo" de realidade aumentada.</p>
+                <div class="card-button">Acessar Compilador</div>
+            </a>
+
+            <a href="./pages/slides.html" class="action-card">
+                <div class="card-icon"><i data-feather="upload-cloud" style="width:40px; height:40px; stroke-width: 1.5;"></i></div>
+                <h3>Gerenciar Conteúdo</h3>
+                <p>Envie os conteúdos que serão exibidos na experiência AR, como slides (PDF, PPTX) ou modelos 3D completos (GLB, GLTF).</p>
+                <div class="card-button">Gerenciar Conteúdo</div>
+            </a>
+            
+            <a href="./pages/ar-main.html" class="action-card">
+                <div class="card-icon"><i data-feather="camera" style="width:40px; height:40px; stroke-width: 1.5;"></i></div>
+                <h3>Visualizador AR</h3>
+                <p>Inicie a câmera, aponte para um alvo e veja a mágica acontecer. Interaja com os objetos e slides em realidade aumentada.</p>
+                <div class="card-button">Iniciar Experiência</div>
+            </a>
         </div>
-        <!-- <div class="mb-8 md:mb-0">
-          <h3 class="text-lg font-semibold mb-4">Recursos</h3>
-          <ul class="space-y-2">
-            <li><a href="/politica-privacidade" class="text-blue-600 hover:text-blue-800">Política de Privacidade</a></li>
-            <li><a href="/termos-uso" class="text-blue-600 hover:text-blue-800">Termos de Uso</a></li>
-            <li><a href="/documentacao" class="text-blue-600 hover:text-blue-800">Documentação Técnica</a></li>
-          </ul>
-        </div> -->
-        <div>
-          <h3 class="text-lg font-semibold mb-4">Instituição
-          </h3>
-          <p class="text-gray-600">
-            Universidade Federa Rural do Rio de Janeiro<br>
-            Instituto Multidisciplinar<br>
-          </p>
+    </main>
+
+    <footer class="text-center">
+        <div class="container">
+            <p>Laboratório Digital de Realidade Aumentada</p>
+            <p style="font-size: 0.8rem; margin-top: 0.5rem;">Universidade Federal Rural do Rio de Janeiro - Instituto Multidisciplinar</p>
         </div>
-      </div>
-      <div class="mt-8 pt-8 border-t text-center text-gray-600">
-        <p>Laboratório Digital de Realidade Aumentada.</p>
-      </div>
-    </div>
-  </footer>
+    </footer>
+
+    <script type="module">
+        feather.replace();
+
+        // Importa o DotEnv para carregar o IP do servidor usando o VITE, se não estiver definido, usa 'localhost'
+        const SERVER_IP     = import.meta.env.VITE_SERVER_IP    || 'localhost';
+        const SERVER_PORT   = import.meta.env.VITE_SERVER_PORT  || '3000';
+        const USE_HTTPS     = import.meta.env.VITE_USE_HTTPS === 'true' || false;
+        
+        console.log('VITE_SERVER_IP →', import.meta.env.VITE_SERVER_IP);
+        console.log(Object.keys(import.meta.env));
+        console.log(`Conectando ao servidor AR em: ${SERVER_IP}`);
+    </script>
 </body>
 </html>
