@@ -507,6 +507,7 @@ function generateMindARGLTFModel({ codetgt, modelFilename = "model.gltf", scale 
 
       <a-entity mindar-image-target="targetIndex: 0">
         <a-gltf-model
+          drag-rotator="speed: 4" 
           src="#gltf-model"
           position="${position}"
           scale="${scale}"
