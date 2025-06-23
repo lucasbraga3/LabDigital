@@ -1,0 +1,145 @@
+
+/* --- Tema e Variáveis Globais --- */
+:root {
+    --primary-color: #007bff;
+    --background-color: #121212;
+    --surface-color: #1e1e1e;
+    --text-color: #e0e0e0;
+    --text-muted: #888;
+    --border-color: #333;
+}
+
+/* --- Reset e Estilo Base --- */
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+main {
+    flex-grow: 1;
+}
+
+/* --- Header & Footer --- */
+header {
+    background-color: var(--surface-color);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 0;
+}
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+header a {
+    color: var(--text-color);
+    text-decoration: none;
+    transition: color 0.3s;
+    font-weight: 600;
+}
+header a:hover {
+    color: var(--primary-color);
+}
+
+footer {
+    background-color: var(--surface-color);
+    border-top: 1px solid var(--border-color);
+    padding: 2.5rem 0;
+    margin-top: 4rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+footer h3 {
+    color: var(--text-color);
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+}
+
+/* --- Seção Hero --- */
+.hero-section {
+    text-align: center;
+    padding: 5rem 1rem;
+}
+.hero-section h1 {
+    font-size: 2.8rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+}
+.hero-section .subtitle {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+    max-width: 650px;
+    margin: 0 auto 3rem auto;
+}
+
+/* --- Grid de Ações --- */
+.action-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.action-card {
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: left;
+    text-decoration: none;
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.action-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.card-icon {
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+}
+
+.action-card h3 {
+    font-size: 1.4rem;
+    margin: 0 0 0.5rem 0;
+}
+
+.action-card p {
+    color: var(--text-muted);
+    line-height: 1.6;
+    flex-grow: 1; /* Faz a descrição ocupar o espaço disponível */
+    margin-bottom: 1.5rem;
+}
+
+.card-button {
+    display: inline-block;
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    text-align: center;
+    transition: background-color 0.3s;
+}
+.card-button:hover {
+    background-color: #0056b3;
+}
+
+@media (max-width: 768px) {
+    .hero-section h1 { font-size: 2.2rem; }
+    .hero-section { padding: 3rem 1rem; }
+}

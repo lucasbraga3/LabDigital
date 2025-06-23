@@ -1,0 +1,118 @@
+
+/* --- Tema e Variáveis Globais --- */
+:root {
+    --primary-color: #007bff;
+    --background-color: #121212;
+    --surface-color: #1e1e1e;
+    --surface-hover: #2a2a2a;
+    --text-color: #e0e0e0;
+    --text-muted: #888;
+    --error-color: #cf6679;
+    --success-color: #66bb6a;
+    --border-color: #333;
+}
+
+/* --- Reset e Estilo Base --- */
+body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* --- Header & Footer --- */
+header { background-color: var(--surface-color); border-bottom: 1px solid var(--border-color); padding: 1.5rem 1rem; display: flex; justify-content: space-between; align-items: center; }
+header a { color: var(--text-color); text-decoration: none; transition: color 0.3s; }
+header a:hover { color: var(--primary-color); }
+footer { background-color: var(--surface-color); border-top: 1px solid var(--border-color); padding: 2rem 1rem; margin-top: 4rem; color: var(--text-muted); }
+footer h3 { color: var(--text-color); font-size: 1.1rem; margin-bottom: 1rem; }
+
+/* --- Card de Upload --- */
+.upload-card { background-color: var(--surface-color); border-radius: 12px; padding: 2rem; margin-top: 2rem; }
+h2 { font-size: 1.8rem; font-weight: 600; margin-bottom: 0.5rem; }
+p { color: var(--text-muted); line-height: 1.6; }
+
+/* --- Seletor de Modo --- */
+.mode-switcher { display: flex; background-color: var(--background-color); border-radius: 8px; padding: 4px; margin: 1.5rem 0; }
+.mode-switcher button { flex: 1; padding: 0.75rem 1rem; border: none; background-color: transparent; color: var(--text-muted); border-radius: 6px; cursor: pointer; font-weight: 600; transition: background-color 0.3s, color 0.3s; }
+.mode-switcher button.active { background-color: var(--primary-color); color: white; }
+.mode-switcher button:not(.active):hover { color: var(--text-color); }
+
+/* --- Grupo de Formulário --- */
+.form-group { margin-bottom: 1.5rem; }
+.form-group label { display: block; font-weight: 600; margin-bottom: 0.5rem; }
+.form-group input[type="text"] { width: 100%; padding: 0.75rem; background-color: var(--background-color); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-color); font-size: 1rem; box-sizing: border-box; }
+.form-group input[type="text"]:focus { outline: none; border-color: var(--primary-color); }
+
+/* --- Instruções --- */
+#instructions { list-style: none; padding-left: 0; color: var(--text-muted); }
+#instructions li { padding-left: 1.5rem; position: relative; margin-bottom: 0.5rem; }
+#instructions li::before { content: '›'; position: absolute; left: 0; color: var(--primary-color); font-weight: bold; font-size: 1.2rem; }
+
+/* --- Estilo do Dropzone --- */
+.dropzone {
+    border: 2px dashed var(--border-color);
+    border-radius: 12px;
+    background-color: var(--background-color);
+    transition: border-color 0.3s, background-color 0.3s;
+    padding: 1.5rem;
+}
+.dropzone .dz-message { color: var(--text-muted); font-weight: 600; margin: 0; }
+.dropzone.dz-drag-hover { border-color: var(--primary-color); background-color: var(--surface-hover); }
+
+/* --- [NOVO] Estilo da Lista de Arquivos Customizada --- */
+.file-preview-container {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.file-preview-item {
+    background-color: var(--background-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+.file-preview-item .file-icon { color: var(--primary-color); }
+.file-preview-item .file-details { flex-grow: 1; }
+.file-preview-item .file-name { font-weight: 600; color: var(--text-color); word-break: break-all; }
+.file-preview-item .file-size { font-size: 0.8rem; color: var(--text-muted); }
+.file-preview-item .remove-file-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: color 0.2s, background-color 0.2s;
+}
+.file-preview-item .remove-file-btn:hover {
+    color: var(--error-color);
+    background-color: rgba(207, 102, 121, 0.1);
+}
+
+/* --- Barra de Progresso e Botão --- */
+.progress-bar-bg { width: 100%; background: var(--background-color); border-radius: 8px; height: 1rem; margin-top: 1rem; overflow: hidden; }
+.progress-bar-fg { height: 100%; background: var(--primary-color); border-radius: 8px; width: 0%; transition: width .3s ease-in-out; }
+.upload-button { width: 100%; font-size: 1.1rem; font-weight: 600; padding: 0.8rem 1.5rem; border: none; border-radius: 8px; background-color: var(--primary-color); color: white; cursor: pointer; transition: background-color 0.3s; margin-top: 1.5rem; }
+.upload-button:hover { background-color: #0056b3; }
+
+/* --- Alertas de Feedback --- */
+.alert { display: flex; align-items: center; gap: 0.75rem; padding: 1rem; margin-top: 1rem; border-radius: 8px; border: 1px solid transparent; font-weight: 600; }
+.alert-error { background-color: rgba(207, 102, 121, 0.1); border-color: var(--error-color); color: var(--error-color); }
+.alert-success { background-color: rgba(102, 187, 106, 0.1); border-color: var(--success-color); color: var(--success-color); }

@@ -1,0 +1,212 @@
+
+/* --- Reset Básico e Estilo Global --- */
+:root {
+    --primary-color: #007bff;
+    --background-color: #121212;
+    --surface-color: #1e1e1e;
+    --text-color: #e0e0e0;
+    --error-color: #cf6679;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    overflow: hidden;
+}
+
+#ar-container canvas {
+  /* Aumenta o contraste para que as áreas escuras fiquem mais escuras e as claras mais claras.
+    Valores entre 110% e 150% costumam funcionar bem.
+  */
+  filter: contrast(100%) brightness(110%) saturate(120%);
+
+  /*
+    Você pode combinar filtros! Por exemplo, para diminuir um pouco o brilho
+    e aumentar o contraste ao mesmo tempo. Experimente descomentar a linha abaixo
+    e ajustar os valores para ver o que fica melhor no seu ambiente.
+  */
+  /* filter: brightness(95%) contrast(120%); */
+  
+  /*
+    Se as cores parecerem "lavadas", você pode aumentar a saturação.
+  */
+  /* filter: saturate(120%); */
+}
+
+/* --- Classe Utilitária --- */
+.hidden {
+    display: none !important;
+}
+
+/* --- Tela de Entrada --- */
+#entry-screen {
+    position: relative; /* CORRIGIDO: Necessário para o z-index funcionar */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    padding: 2rem;
+    box-sizing: border-box;
+    text-align: center;
+    z-index: 10;
+    background-color: var(--background-color); /* Garante que tenha fundo sólido */
+}
+#entry-screen h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+#entry-screen p {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+    max-width: 500px;
+}
+#ar-code-form {
+    display: flex;
+    gap: 0.5rem;
+}
+#ar-code-input {
+    font-size: 1rem;
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: 1px solid var(--surface-color);
+    background-color: #2a2a2a;
+    color: var(--text-color);
+    width: 250px;
+}
+#ar-code-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+#load-button {
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--primary-color);
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+#load-button:hover {
+    background-color: #0056b3;
+}
+
+/* --- Overlay de Carregamento --- */
+#loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid var(--surface-color);
+    border-top: 5px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* --- Container de Erro --- */
+#error-container {
+    position: relative; /* CORRIGIDO: Necessário para o z-index funcionar */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    height: 100vh;
+    padding: 2rem;
+    box-sizing: border-box;
+    z-index: 10;
+    background-color: var(--background-color);
+}
+#error-message {
+    background-color: var(--surface-color);
+    padding: 2rem;
+    border-radius: 12px;
+    border-left: 5px solid var(--error-color);
+}
+#error-message p {
+    margin: 0 0 1.5rem 0;
+    font-size: 1.1rem;
+    color: var(--text-color);
+}
+#retry-button {
+    font-size: 1rem;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    border: 1px solid var(--text-color);
+    background: none;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+}
+#retry-button:hover {
+    background-color: var(--text-color);
+    color: var(--background-color);
+}
+
+/* --- Container da AR --- */
+#ar-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100vh;
+    z-index: 1; /* A cena AR fica abaixo das telas de entrada/erro */
+}
+
+/* --- Controles da AR --- */
+#ar-controls {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: flex;
+    gap: 0.5rem;
+    background-color: rgba(30, 30, 30, 0.8);
+    padding: 0.75rem;
+    border-radius: 50px;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.control-button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.2s;
+}
+.control-button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}

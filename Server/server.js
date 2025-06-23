@@ -1,16 +1,28 @@
 // server.js - Versão final para Slides e Modelos 3D com Redis, HTTPS e Upload robusto
 
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
 const multer = require('multer');
 const { fromPath } = require('pdf2pic');
 const { createClient } = require('redis');
-const https = require('https');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.SERVER_PORT || 3000;
+
+// Caminhos dos arquivos de certificado e chave (configure no seu .env)
+const SSL_KEY_PATH = process.env.SSL_KEY_PATH || './localhost+2-key.pem';
+const SSL_CERT_PATH = process.env.SSL_CERT_PATH || './localhost+2.pem';
+
+// Carrega certificados
+const sslOptions = {
+  key: fs.readFileSync(path.resolve(__dirname, SSL_KEY_PATH)),
+  cert: fs.readFileSync(path.resolve(__dirname, SSL_CERT_PATH)),
+};
+
 
 // Middleware de CORS e JSON
 app.use(cors());
@@ -23,10 +35,10 @@ redis.on('error', (err) => console.error('Redis Client Error', err));
 redis.connect().then(() => console.log('✅ Redis Connected')).catch(console.error);
 
 // SSL setup (HTTPS)
-const sslOptions = {
-  key: fs.readFileSync('./localhost+2-key.pem'),
-  cert: fs.readFileSync('./localhost+2.pem'),
-};
+// const sslOptions = {
+//   key: fs.readFileSync('./localhost+2-key.pem'),
+//   cert: fs.readFileSync('./localhost+2.pem'),
+// };
 
 // Storage para slides (.pdf, .pptx, .png, .jpg, .jpeg)
 const slidesStorage = multer.diskStorage({
@@ -72,14 +84,113 @@ const uploadAssetsDisk = multer({ storage: assetsStorage });
 const upload = multer({ storage: multer.memoryStorage() });
 
 // HTTPS Setup
-https.createServer(sslOptions, app).listen(PORT, () => {
-  console.log(`🔒 HTTPS Server rodando na porta ${PORT}`);
-});
+// https.createServer(sslOptions, app).listen(PORT, () => {
+//   console.log(`🔒 HTTPS Server rodando na porta ${PORT}`);
+// });
 
 // --- ROUTES ---
 
+// server.js - Rota para garantir única sessão Hyperbeam com resposta JSON
+app.post('/api/hyperbeam/create-room', async (req, res) => {
+  const { initial_url } = req.body;
+  console.log('Criando/recuperando sessão Hyperbeam para URL:', initial_url);
+
+  try {
+    // 1. Listar sessões ativas
+    const listRes = await fetch('https://engine.hyperbeam.com/v0/vm', {
+      headers: { 'Authorization': `Bearer ${process.env.HYPERBEAM_KEY}` }
+    });
+
+    let sessions = [];
+    if (listRes.ok) {
+      const listData = await listRes.json();
+      console.log('Sessões Hyperbeam encontradas:', listData);
+      sessions = Array.isArray(listData.results) ? listData.results : [];
+    } else {
+      console.warn('Falha ao listar sessões Hyperbeam:', listRes.status, await listRes.text());
+    }
+
+    // 2. Se houver sessão ativa, obter detalhes e retornar JSON
+    if (sessions.length > 0) {
+      const existingId = sessions[0].id;
+      console.log('Usando sessão existente:', existingId);
+      const detailRes = await fetch(`https://engine.hyperbeam.com/v0/vm/${existingId}`, {
+        headers: { 'Authorization': `Bearer ${process.env.HYPERBEAM_KEY}` }
+      });
+      if (detailRes.ok) {
+        const detailData = await detailRes.json();
+        console.log('Embed URL da sessão existente:', detailData.embed_url);
+        return res.json({
+          sessionId: detailData.session_id,
+          embedURL: detailData.embed_url,
+          adminToken: detailData.admin_token
+        });
+      } else {
+        console.warn('Falha ao obter detalhes da sessão:', detailRes.status, await detailRes.text());
+      }
+    }
+
+    // 3. Se não houver sessão ativa ou falhar ao obter detalhes, criar nova sessão
+    const createRes = await fetch('https://engine.hyperbeam.com/v0/vm', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${process.env.HYPERBEAM_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ start_url: initial_url })
+    });
+    const createData = await createRes.json();
+    if (!createRes.ok) {
+      console.error('Erro criando nova sessão Hyperbeam:', createRes.status, createData);
+      return res.status(createRes.status).json(createData);
+    }
+
+    console.log('Nova sessão criada:', createData.session_id);
+    return res.json({
+      sessionId: createData.session_id,
+      embedURL: createData.embed_url,
+      adminToken: createData.admin_token
+    });
+
+  } catch (err) {
+    console.error('Erro interno ao criar/recuperar sessão Hyperbeam:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// Rota para encerrar a sala Hyperbeam
+app.post('/api/hyperbeam/terminate-room', async (req, res) => {
+  const { session_id } = req.body;
+  console.log('Encerrando sala Hyperbeam:', session_id);
+  try {
+    const hbRes = await fetch(`https://engine.hyperbeam.com/v0/vm/${session_id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${process.env.HYPERBEAM_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!hbRes.ok) {
+      const errorData = await hbRes.json();
+      return res.status(hbRes.status).json(errorData);
+    }
+
+    console.log('Sala Hyperbeam encerrada com sucesso:', session_id);
+    return res.status(200).json({ message: 'Sala encerrada com sucesso' });
+  } catch (err) {
+    console.error('Erro ao encerrar sala Hyperbeam:', err);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// Rota de teste para verificar se o servidor está rodando
+app.get('/', (req, res) => {
+  res.send('Servidor rodando! Use /upload/target para enviar um arquivo .mind');
+});
+
 // Upload de TARGET (.mind para AR)
-app.post('/upload/target', upload.single('targets'), async (req, res) => {
+app.post('/api/upload/target', upload.single('targets'), async (req, res) => {
   let codetgt = req.body.codetgt || Math.floor(Math.random() * 1000000) + 1;
   const key = `mind:${codetgt}`;
   const exists = await redis.exists(key);
@@ -94,7 +205,7 @@ app.post('/upload/target', upload.single('targets'), async (req, res) => {
 });
 
 // Recupera o .mind da base Redis
-app.get('/targets/:codetgt', async (req, res) => {
+app.get('/api/targets/:codetgt', async (req, res) => {
   const { codetgt } = req.params;
   try {
     const base64 = await redis.get(`mind:${codetgt}`);
@@ -109,7 +220,7 @@ app.get('/targets/:codetgt', async (req, res) => {
 });
 
 // Upload de slides (.pdf, .pptx, .png, .jpg, .jpeg)
-app.post('/upload/slides', uploadSlides.single('slides'), async (req, res) => {
+app.post('/api/upload/slides', uploadSlides.single('slides'), async (req, res) => {
   try {
     let codetgt = req.body.codetgt;
     if (Array.isArray(codetgt)) codetgt = codetgt[0];
@@ -118,6 +229,7 @@ app.post('/upload/slides', uploadSlides.single('slides'), async (req, res) => {
     const ext = path.extname(filePath).toLowerCase();
 
     let pages = [];
+    let pagesCount = 0;
 
     // Se for PDF, converte para imagens e salva cada página no Redis
     if (ext === '.pdf') {
@@ -143,6 +255,8 @@ app.post('/upload/slides', uploadSlides.single('slides'), async (req, res) => {
           break;
         }
       }
+      pagesCount = pages.length;
+
       fs.unlinkSync(filePath); // Remove PDF original
     } else {
       // PNG, JPG, PPTX etc: salva como uma página só (simples)
@@ -153,7 +267,11 @@ app.post('/upload/slides', uploadSlides.single('slides'), async (req, res) => {
     }
 
     // Gera HTML AR para os slides enviados
-    const gencode = generateMindARSlidesHtml({ codetgt, pages });
+    console.log(`Gerando HTML para slides: ${codetgt}, páginas: ${pages.join(', ')}`);
+    const gencode = generateMindARSlidesHtml({ codetgt, pages, pagesCount });
+    if (!gencode) {
+      return res.status(500).json({ success: false, message: "Failed to generate HTML for slides." });
+    }
     const htmlBase64 = Buffer.from(gencode).toString('base64');
     await redis.set(`slides:${codetgt}`, htmlBase64, 'EX', 10800);
     res.status(200).json({ success: true, codetgt, images: pages, html: `/slides/${codetgt}/${codetgt}.html` });
@@ -164,7 +282,7 @@ app.post('/upload/slides', uploadSlides.single('slides'), async (req, res) => {
 });
 
 // Servir HTML dos slides do Redis
-app.get('/slides/:codetgt', async (req, res) => {
+app.get('/api/slides/:codetgt', async (req, res) => {
   const { codetgt } = req.params;
   try {
     const html = await redis.get(`slides:${codetgt}`);
@@ -178,7 +296,7 @@ app.get('/slides/:codetgt', async (req, res) => {
 });
 
 // Servir imagens individuais de slides
-app.get('/img/:codetgt/:page', async (req, res) => {
+app.get('/api/img/:codetgt/:page', async (req, res) => {
   const key = `img:${req.params.codetgt}:${req.params.page}`;
   try {
     const base64 = await redis.get(key);
@@ -193,7 +311,7 @@ app.get('/img/:codetgt/:page', async (req, res) => {
 });
 
 // Upload de modelos 3D (GLTF/GLB, BIN, PNG, etc) e salva também no Redis
-app.post('/upload/model', uploadAssetsDisk.array('files'), async (req, res) => {
+app.post('/api/upload/model', uploadAssetsDisk.array('files'), async (req, res) => {
   try {
     let codetgt = req.body.codetgt;
     if (Array.isArray(codetgt)) codetgt = codetgt[0];
@@ -240,7 +358,7 @@ app.post('/upload/model', uploadAssetsDisk.array('files'), async (req, res) => {
 
 
 // Servir HTML para modelo 3D do Redis
-app.get('/model/:codetgt', async (req, res) => {
+app.get('/api/model/:codetgt', async (req, res) => {
   const { codetgt } = req.params;
   try {
     const htmlBase64 = await redis.get(`model:${codetgt}`);
@@ -253,7 +371,7 @@ app.get('/model/:codetgt', async (req, res) => {
   }
 });
 
-app.get('/models/:codetgt/:filename', async (req, res) => {
+app.get('/api/models/:codetgt/:filename', async (req, res) => {
   const { codetgt, filename } = req.params;
   try {
     const base64 = await redis.get(`modelasset:${codetgt}:${filename}`);
@@ -271,6 +389,18 @@ app.get('/models/:codetgt/:filename', async (req, res) => {
   }
 });
 
+// Rota para servir imagens de setas (setas para navegação nos slides)
+app.get('/api/arrow/:filename', (req, res) => {
+  const { filename } = req.params;
+  const filePath = path.join(__dirname, 'public', filename
+);
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).send('Arrow image not found');
+  }
+  res.set('Content-Type', 'image/png');
+  res.send(fs.readFileSync(filePath));
+});
+
 // Middleware global de erro para uploads
 app.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
@@ -286,40 +416,67 @@ app.use((err, req, res, next) => {
 
 
 // Funções utilitárias para gerar HTML AR
-function generateMindARSlidesHtml({ codetgt, pages }) {
-  const mindUrl = `https://localhost:${PORT}/targets/${codetgt}`;
+function generateMindARSlidesHtml({ codetgt, pages, pagesCount }) {
+  const mindUrl = `/api/targets/${codetgt}`;
   const arrowTags = [
-    `<img id="img1" src="https://localhost:${PORT}/left-arrow.png" crossorigin="anonymous" />`,
-    `<img id="img2" src="https://localhost:${PORT}/right-arrow.png" crossorigin="anonymous" />`
+    `<img id="img1" src="/api/arrow/left-arrow.png" crossorigin="anonymous" />`,
+    `<img id="img2" src="/api/arrow/right-arrow.png" crossorigin="anonymous" />`
   ].join('\n    ');
 
   const assetTags = pages
-    .map(i => `<img id="example-image-${i}" src="https://localhost:${PORT}/img/${codetgt}/${i}" crossorigin="anonymous" />`)
+    .map(i => `<img id="example-image-${i}" src="/api/img/${codetgt}/${i}" crossorigin="anonymous" />`)
     .join('\n    ');
 
-  const entityTags = pages.map((i, idx) => `
-    <a-entity id="slide-${i}" class="slides" ${idx > 0 ? 'visible="false"' : 'visible="true"'}>
-      <a-image src="#example-image-${i}"></a-image>
-      <a-image class="clickable left-arrow"  src="#img1"  position="-0.7 0 0" height="0.15" width="0.15"></a-image>
-      <a-image class="clickable right-arrow" src="#img2" position=" 0.7 0 0" height="0.15" width="0.15"></a-image>
-    </a-entity>`).join('\n');
+    if (pagesCount === 0) {
+        console.warn('Nenhuma página encontrada para o codetgt:', codetgt);
+        return null; // Retorna null se não houver páginas
+    }
+    if (pagesCount === 1) {
+      console.log('Gerando HTML para slide único:', pages[0]);
 
-  return `
+        const entityTags = pages.map((i, idx) => `
+        <a-entity id="slide-${i}" class="slides" ${idx > 0 ? 'visible="false"' : 'visible="true"'}>
+          <a-image src="#example-image-${i}"></a-image>
+        </a-entity>`).join('\n');
+
+        return `
     <a-scene id="example-target" mindar-image="imageTargetSrc: ${mindUrl}; uiScanning: yes; autoStart: false;" color-space="sRGB" renderer="colorManagement: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
       <a-camera position="0 0 0" look-controls="enabled: false" cursor="fuse: false; rayOrigin: mouse;" raycaster="near: 10; far: 10000; objects: .clickable"></a-camera>
         <a-assets>
-          ${arrowTags}
           ${assetTags}
         </a-assets>
       <a-entity id="slides-container" mindar-image-target="targetIndex: 0">
         ${entityTags}
       </a-entity>
     </a-scene>`;
+    }
+    else if (pagesCount > 1) {
+      console.log('Gerando HTML para slides com múltiplas páginas:', pages);
+
+            const entityTags = pages.map((i, idx) => `
+    <a-entity id="slide-${i}" class="slides" ${idx > 0 ? 'visible="false"' : 'visible="true"'}>
+      <a-image src="#example-image-${i}"></a-image>
+      <a-image class="clickable left-arrow"  src="#img1"  position="-0.7 0 0" height="0.15" width="0.15"></a-image>
+      <a-image class="clickable right-arrow" src="#img2" position=" 0.7 0 0" height="0.15" width="0.15"></a-image>
+    </a-entity>`).join('\n');
+
+    return `
+      <a-scene id="example-target" mindar-image="imageTargetSrc: ${mindUrl}; uiScanning: yes; autoStart: false;" color-space="sRGB" renderer="colorManagement: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+        <a-camera position="0 0 0" look-controls="enabled: false" cursor="fuse: false; rayOrigin: mouse;" raycaster="near: 10; far: 10000; objects: .clickable"></a-camera>
+          <a-assets>
+            ${arrowTags}
+            ${assetTags}
+          </a-assets>
+        <a-entity id="slides-container" mindar-image-target="targetIndex: 0">
+          ${entityTags}
+        </a-entity>
+      </a-scene>`;
+    }
 }
 
 function generateMindARGLTFModel({ codetgt, modelFilename = "model.gltf", scale = "0.5 0.5 0.5", position = "0 0 0", rotation = "0 0 0" }) {
-  const mindUrl = `https://localhost:${PORT}/targets/${codetgt}`;
-  const modelUrl = `https://localhost:${PORT}/models/${codetgt}/${modelFilename}`;
+  const mindUrl = `/api/targets/${codetgt}`;
+  const modelUrl = `/api/models/${codetgt}/${modelFilename}`;
 
   return `
     <a-scene
@@ -352,3 +509,21 @@ function generateMindARGLTFModel({ codetgt, modelFilename = "model.gltf", scale 
     </a-scene>
   `;
 }
+
+// Middleware global de erro para uploads
+app.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    console.error('MULTER ERROR:', err);
+    return res.status(400).send(`MulterError: ${err.message}`);
+  }
+  if (err) {
+    console.error('UNEXPECTED ERROR:', err);
+    return res.status(500).send('Erro interno no servidor.');
+  }
+  next();
+});
+
+// Cria o servidor HTTPS em vez do HTTP padrão
+https.createServer(sslOptions, app).listen(PORT, () => {
+  console.log(`🔒 HTTPS server rodando em https://localhost:${PORT}`);
+});
