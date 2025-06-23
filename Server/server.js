@@ -197,6 +197,7 @@ app.post('/api/upload/target', upload.single('targets'), async (req, res) => {
   if (exists) return res.status(409).send('Target already exists.');
   try {
     await redis.set(key, req.file.buffer.toString('base64'), 'EX', 108000);
+    console.log(`Target ${codetgt} saved to Redis.`);
     return res.status(200).send({ fileName: `${codetgt}.mind`, codetgt });
   } catch (err) {
     console.error('Error saving target:', err);
@@ -213,6 +214,7 @@ app.get('/api/targets/:codetgt', async (req, res) => {
     const buffer = Buffer.from(base64, 'base64');
     res.set('Content-Type', 'application/octet-stream');
     res.send(buffer);
+    console.log(`Target ${codetgt} served successfully.`);
   } catch (err) {
     console.error('Redis target fetch error:', err);
     res.status(500).send('Redis error');
@@ -274,6 +276,7 @@ app.post('/api/upload/slides', uploadSlides.single('slides'), async (req, res) =
     }
     const htmlBase64 = Buffer.from(gencode).toString('base64');
     await redis.set(`slides:${codetgt}`, htmlBase64, 'EX', 10800);
+    console.log(`HTML for slides ${codetgt} saved to Redis.`);
     res.status(200).json({ success: true, codetgt, images: pages, html: `/slides/${codetgt}/${codetgt}.html` });
   } catch (err) {
     console.error(err);
@@ -289,6 +292,7 @@ app.get('/api/slides/:codetgt', async (req, res) => {
     if (!html) return res.status(404).send('HTML not found in Redis.');
     res.set('Content-Type', 'text/html');
     res.send(Buffer.from(html, 'base64').toString('utf-8'));
+    console.log(`Slides HTML for ${codetgt} served successfully.`);
   } catch (err) {
     console.error('Redis HTML fetch error:', err);
     res.status(500).send('Redis error');
@@ -304,6 +308,7 @@ app.get('/api/img/:codetgt/:page', async (req, res) => {
     const buffer = Buffer.from(base64, 'base64');
     res.set('Content-Type', 'image/png');
     res.send(buffer);
+    console.log(`Image ${key} served successfully.`);
   } catch (err) {
     console.error('Redis error:', err);
     res.status(500).send('Redis error');
@@ -317,7 +322,6 @@ app.post('/api/upload/model', uploadAssetsDisk.array('files'), async (req, res) 
     if (Array.isArray(codetgt)) codetgt = codetgt[0];
     if (!codetgt) return res.status(400).json({ success: false, message: "Missing codetgt" });
 
-    const modelsDir = path.join(__dirname, 'public');
     let mainModel = null;
 
     for (const file of req.files) {
@@ -348,7 +352,7 @@ app.post('/api/upload/model', uploadAssetsDisk.array('files'), async (req, res) 
     });
     const htmlBase64 = Buffer.from(html).toString('base64');
     await redis.set(`model:${codetgt}`, htmlBase64, 'EX', 10800);
-
+    console.log(`3D Model HTML for ${codetgt} saved to Redis.`);
     res.status(200).json({ success: true, codetgt, html: `/model/${codetgt}` });
   } catch (err) {
     console.error("Upload error:", err);
@@ -384,8 +388,10 @@ app.get('/api/models/:codetgt/:filename', async (req, res) => {
     if (ext === '.bin') mime = 'application/octet-stream';
     res.set('Content-Type', mime);
     res.send(Buffer.from(base64, 'base64'));
+    console.log(`Model asset ${filename} for codetgt ${codetgt} served successfully.`);
   } catch (err) {
     res.status(500).send('Erro ao buscar arquivo no Redis');
+    console.error('Error serving model asset:', err);
   }
 });
 
@@ -399,6 +405,7 @@ app.get('/api/arrow/:filename', (req, res) => {
   }
   res.set('Content-Type', 'image/png');
   res.send(fs.readFileSync(filePath));
+  console.log(`Arrow image ${filename} served successfully.`);
 });
 
 // Middleware global de erro para uploads

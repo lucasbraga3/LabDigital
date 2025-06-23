@@ -76,6 +76,13 @@ LabDigital
 - mkcert instalado e CA confiável (`mkcert -install`)
 - ngrok instalado
 
+- Instale essas dependências no Linux antes de executar o npm install no cliente. (Testado no Ubuntu 24.04).
+
+  ```bash
+  sudo apt-get update
+  sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev pkg-config
+  ```
+
 ---
 
 ## Como Executar - Servidor
