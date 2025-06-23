@@ -83,13 +83,6 @@ const uploadAssetsDisk = multer({ storage: assetsStorage });
 // MemoryStorage para targets (arquivo .mind gerado)
 const upload = multer({ storage: multer.memoryStorage() });
 
-// HTTPS Setup
-// https.createServer(sslOptions, app).listen(PORT, () => {
-//   console.log(`🔒 HTTPS Server rodando na porta ${PORT}`);
-// });
-
-// --- ROUTES ---
-
 // server.js - Rota para garantir única sessão Hyperbeam com resposta JSON
 app.post('/api/hyperbeam/create-room', async (req, res) => {
   const { initial_url } = req.body;
