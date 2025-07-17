@@ -18,9 +18,9 @@ html, body {
     overflow: hidden;
 }
 
-#ar-container canvas {
+/* #ar-container canvas {
     filter: contrast(100%) brightness(110%) saturate(120%);
-}
+} */
 
 /* --- Classe Utilitária --- */
 .hidden {

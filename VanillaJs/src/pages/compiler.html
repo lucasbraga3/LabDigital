@@ -193,14 +193,14 @@
                 const dropzone = new Dropzone('#compilerDropzone', {
                     url: '#',
                     autoProcessQueue: false,
-                    maxFiles: 1,
+                    maxFiles: 2,
                     acceptedFiles: '.png,.jpg,.jpeg',
                     addRemoveLinks: false,
                     clickable: true,
                     dictDefaultMessage: `<i data-feather="image" style="width:48px; height:48px; stroke-width:1.5;"></i><br>Clique ou arraste uma imagem aqui`,
                     init: function () {
                         this.on('addedfile', (file) => {
-                            if (this.files.length > 1) this.removeFile(this.files[0]);
+                            //if (this.files.length > 1) this.removeFile(this.files[0]);
                             const reader = new FileReader();
                             reader.onload = (e) => {
                                 previewContainer.style.display = 'block';

@@ -277,6 +277,71 @@ app.post('/api/upload/slides', uploadSlides.single('slides'), async (req, res) =
   }
 });
 
+//slides multiplos
+app.post('/api/upload/slidesmult', uploadSlides.any('slides'), async (req, res) => {
+  try {
+    let codetgt = req.body.codetgt;
+    if (Array.isArray(codetgt)) codetgt = codetgt[0];
+    let i = 0;
+    for (const file of req.slides){
+      const slidesDir = path.join(__dirname, 'public');
+      const filePath = file.path;
+      const ext = path.extname(filePath).toLowerCase();
+      let pages = [];
+      const savenamevar = `${codetgt}_${i}`
+      let pagesCount = 0;
+      if (ext === '.pdf') {
+        const convert = fromPath(filePath, {
+          density: 150,
+          saveFilename: codetgt,
+          savePath: slidesDir,
+          format: 'png',
+          width: 1024,
+          height: 768,
+          quality: 90
+        });
+
+        for (let page = 1; page <= 200; page++) {
+          try {
+            const out = await convert(page);
+            const imgPath = path.join(slidesDir, path.basename(out.path));
+            const imageBuffer = fs.readFileSync(imgPath);
+            await redis.set(`img:${savenamevar}:${page}`, imageBuffer.toString('base64'), 'EX', 10800);
+            pages.push(page);
+            fs.unlinkSync(imgPath);
+          } catch {
+            break;
+          }
+        }
+        pagesCount = pages.length;
+
+        fs.unlinkSync(filePath); // Remove PDF original
+        i = i + 1;
+      } else {
+        // PNG, JPG, PPTX etc: salva como uma página só (simples)
+        const imageBuffer = fs.readFileSync(filePath);
+        await redis.set(`img:${savenamevar}:1`, imageBuffer.toString('base64'), 'EX', 10800);
+        pages.push(1);
+        fs.unlinkSync(filePath);
+      }
+    }
+    
+    // Gera HTML AR para os slides enviados
+    console.log(`Gerando HTML para slides: ${codetgt}, páginas: ${pages.join(', ')}`);
+    const gencode = generateMindARSlidesHtml({ codetgt, pages, pagesCount });
+    if (!gencode) {
+      return res.status(500).json({ success: false, message: "Failed to generate HTML for slides." });
+    }
+    const htmlBase64 = Buffer.from(gencode).toString('base64');
+    await redis.set(`slides:${codetgt}`, htmlBase64, 'EX', 10800);
+    console.log(`HTML for slides ${codetgt} saved to Redis.`);
+    res.status(200).json({ success: true, codetgt, images: pages, html: `/slides/${codetgt}/${codetgt}.html` });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
 // Servir HTML dos slides do Redis
 app.get('/api/slides/:codetgt', async (req, res) => {
   const { codetgt } = req.params;
@@ -441,7 +506,7 @@ function generateMindARSlidesHtml({ codetgt, pages, pagesCount }) {
 
         return `
     <a-scene id="example-target" mindar-image="imageTargetSrc: ${mindUrl}; uiScanning: yes; autoStart: false;" color-space="sRGB" renderer="colorManagement: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-      <a-camera position="0 0 0" look-controls="enabled: false" cursor="fuse: false; rayOrigin: mouse;" raycaster="near: 10; far: 10000; objects: .clickable"></a-camera>
+      <a-camera position="0 0 0" look-controls="enabled: false" cursor="fuse: false; rayOrigin: mouse;" raycaster=" far: 10000; objects: .clickable"></a-camera>
         <a-assets>
           ${assetTags}
         </a-assets>
@@ -462,7 +527,7 @@ function generateMindARSlidesHtml({ codetgt, pages, pagesCount }) {
 
     return `
       <a-scene id="example-target" mindar-image="imageTargetSrc: ${mindUrl}; uiScanning: yes; autoStart: false;" color-space="sRGB" renderer="colorManagement: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-        <a-camera position="0 0 0" look-controls="enabled: false" cursor="fuse: false; rayOrigin: mouse;" raycaster="near: 10; far: 10000; objects: .clickable"></a-camera>
+        <a-camera position="0 0 0" look-controls="enabled: false" cursor="fuse: false; rayOrigin: mouse;" raycaster=" far: 10000; objects: .clickable"></a-camera>
           <a-assets>
             ${arrowTags}
             ${assetTags}

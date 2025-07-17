@@ -25,13 +25,15 @@ const loadImage = async (file) => {
 // Função principal que orquestra todo o processo de compilação e upload
 const compileFiles = async (files, codetgt = null) => {
   try {
-    // ETAPA 1: Carregar a imagem
+    // ETAPA 1: Carrega imagens
+    const images = [];
     window.updateCompilerProgress(10, 'Carregando imagem na memória...');
-    const image = await loadImage(files[0]);
-
+    for(const file of files){
+      images.push(await loadImage(file));
+    }
     // ETAPA 2: Compilar os alvos com feedback de progresso
     // O progresso da compilação (0-100) será mapeado para a faixa de 20% a 70% da barra total
-    const dataList = await compiler.compileImageTargets([image], (progress) => {
+    const dataList = await compiler.compileImageTargets(images, (progress) => {
       window.updateCompilerProgress(20 + progress * 0.5, 'Analisando e compilando features...');
     });
 
